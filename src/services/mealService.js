@@ -168,6 +168,8 @@ export const getRelatedMeals = async (meal, limit = 3) => {
 
 export const createMeal = async (mealData) => {
   try {
+    console.log('Debugging mealData:', mealData);
+
     // Fetch categories and tags first
     const [categoriesData, tagsData] = await Promise.all([
       getMealCategories(),
@@ -179,18 +181,18 @@ export const createMeal = async (mealData) => {
       name: mealData.name,
       description: mealData.description,
       image: mealData.image,
-      category: mealData.category.map(id => categoriesData.find(cat => cat.id === id)?.name || id),
-      tags: mealData.tags.map(id => tagsData.find(tag => tag.id === id)?.name || id),
+      category: Array.isArray(mealData.category) ? mealData.category.map(id => categoriesData.find(cat => cat.id === id)?.name || id) : [],
+      tags: Array.isArray(mealData.tags) ? mealData.tags.map(id => tagsData.find(tag => tag.id === id)?.name || id) : [],
       prep_time: Number(mealData.prepTime),
       cook_time: Number(mealData.cookTime),
       servings: Number(mealData.servings),
       difficulty: mealData.difficulty,
-      ingredients: mealData.ingredients.map(ing => ({
+      ingredients: Array.isArray(mealData.ingredients) ? mealData.ingredients.map(ing => ({
         item: ing.item,
         amount: Number(ing.amount),
         unit: ing.unit
-      })),
-      instructions: mealData.instructions.filter(inst => inst.trim() !== '')
+      })) : [],
+      instructions: Array.isArray(mealData.instructions) ? mealData.instructions.filter(inst => inst.trim() !== '') : []
     };
 
     console.log('Formatted meal data:', formattedMealData);
@@ -214,4 +216,4 @@ export const createMeal = async (mealData) => {
     console.error('Error in createMeal:', error);
     throw error;
   }
-}; 
+};

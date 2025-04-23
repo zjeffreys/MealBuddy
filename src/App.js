@@ -13,6 +13,7 @@ import { getMealCategories } from './services/mealService';
 import AddMealForm from './components/AddMealForm';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import RecipeDetails from './components/RecipeDetails';
 
 const theme = createTheme({
   palette: {
@@ -147,6 +148,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<MealPlanner />} />
                 <Route path="/recipes" element={<Recipes />} />
+                <Route path="/recipes/:id" element={<RecipeDetails />} />
                 <Route path="/add-recipe" element={<AddMealForm onSubmit={() => {}} onCancel={() => {}} />} />
                 <Route path="/admin" element={
                   <ProtectedRoute>
@@ -170,4 +172,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

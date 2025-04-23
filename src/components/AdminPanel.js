@@ -1,80 +1,65 @@
-import React, { useState } from 'react';
-import { Box, Button, Alert, CircularProgress } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-const seedCategories = async () => {
-  const categories = [
-    { name: 'Breakfast', description: 'Morning meals' },
-    { name: 'Lunch', description: 'Midday meals' },
-    { name: 'Dinner', description: 'Evening meals' },
-    { name: 'Snack', description: 'Small meals between main meals' },
-    { name: 'Dessert', description: 'Sweet treats' }
-  ];
-
-  const { error } = await supabase
-    .from('meal_categories')
-    .insert(categories);
-
-  if (error) throw error;
-};
-
-const seedTags = async () => {
-  const tags = [
-    { name: 'Vegetarian', description: 'Contains no meat or fish' },
-    { name: 'Vegan', description: 'Contains no animal products' },
-    { name: 'Gluten-Free', description: 'Contains no gluten' },
-    { name: 'Dairy-Free', description: 'Contains no dairy' },
-    { name: 'High-Protein', description: 'Rich in protein' },
-    { name: 'Low-Carb', description: 'Low in carbohydrates' },
-    { name: 'Quick & Easy', description: 'Can be prepared quickly' },
-    { name: 'Meal Prep', description: 'Good for meal prepping' }
-  ];
-
-  const { error } = await supabase
-    .from('dietary_tags')
-    .insert(tags);
-
-  if (error) throw error;
-};
-
 const AdminPanel = () => {
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null);
+  const [mealCategories, setMealCategories] = useState([]);
+  const [dietaryTags, setDietaryTags] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleSeedDatabase = async () => {
-    setLoading(true);
-    setStatus(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('meal_categories')
+          .select('*');
 
-    try {
-      await seedCategories();
-      await seedTags();
-      setStatus({ type: 'success', message: 'Database seeded successfully!' });
-    } catch (error) {
-      console.error('Error seeding database:', error);
-      setStatus({ type: 'error', message: 'Failed to seed database. Check console for details.' });
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (categoriesError) throw categoriesError;
+
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('dietary_tags')
+          .select('*');
+
+        if (tagsError) throw tagsError;
+
+        setMealCategories(categoriesData);
+        setDietaryTags(tagsData);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to fetch data. Please check your database.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Button
-        variant="contained"
-        onClick={handleSeedDatabase}
-        disabled={loading}
-        sx={{ mb: 2 }}
-      >
-        {loading ? <CircularProgress size={24} /> : 'Seed Database'}
-      </Button>
+    <div>
+      <h2>Meal Categories</h2>
+      <ul>
+        {mealCategories.map((category) => (
+          <li key={category.id}>{category.name}</li>
+        ))}
+      </ul>
 
-      {status && (
-        <Alert severity={status.type} sx={{ mt: 2 }}>
-          {status.message}
-        </Alert>
-      )}
-    </Box>
+      <h2>Dietary Tags</h2>
+      <ul>
+        {dietaryTags.map((tag) => (
+          <li key={tag.id}>{tag.name}</li>
+        ))}
+      </ul>
+    </div>
   );
 };
 
-export default AdminPanel; 
+export default AdminPanel;

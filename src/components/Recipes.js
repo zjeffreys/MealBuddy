@@ -19,6 +19,7 @@ import {
 import { supabase } from '../lib/supabaseClient';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getImageUrl } from '../services/mealService';
+import { useNavigate } from 'react-router-dom';
 
 const Recipes = () => {
   const [meals, setMeals] = useState([]);
@@ -26,6 +27,7 @@ const Recipes = () => {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMeals();
@@ -49,6 +51,8 @@ const Recipes = () => {
 
       if (error) throw error;
 
+      console.log('Fetched meals:', data);
+
       // Add image URLs and process the data
       const processedMeals = data.map(meal => ({
         ...meal,
@@ -62,6 +66,10 @@ const Recipes = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCardClick = (mealId) => {
+    navigate(`/recipes/${mealId}`);
   };
 
   const filteredMeals = meals.filter(meal => {
@@ -119,12 +127,15 @@ const Recipes = () => {
       <Grid container spacing={3}>
         {filteredMeals.map((meal) => (
           <Grid item xs={12} sm={6} md={4} key={meal.id}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              {meal.imageUrl && (
+            <Card
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+              onClick={() => handleCardClick(meal.id)}
+            >
+              {meal.image && (
                 <CardMedia
                   component="img"
                   height="200"
-                  image={meal.imageUrl}
+                  image={meal.image}
                   alt={meal.name}
                   sx={{ objectFit: 'cover' }}
                 />
@@ -166,6 +177,17 @@ const Recipes = () => {
                     />
                   ))}
                 </Box>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2 }}>
+                  {meal.tags && meal.tags.map((tag, index) => (
+                    <Chip
+                      key={index}
+                      label={tag}
+                      size="small"
+                      sx={{ backgroundColor: 'green', color: 'white' }}
+                    />
+                  ))}
+                </Box>
               </CardContent>
             </Card>
           </Grid>
@@ -175,4 +197,4 @@ const Recipes = () => {
   );
 };
 
-export default Recipes; 
+export default Recipes;

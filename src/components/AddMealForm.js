@@ -20,6 +20,7 @@ import { styled } from '@mui/material/styles';
 import { supabase } from '../lib/supabaseClient';
 import OpenAI from 'openai';
 import { useNavigate } from 'react-router-dom';
+import { createMeal } from '../services/mealService';
 
 const openai = new OpenAI({
   apiKey: process.env.REACT_APP_OPENAI_API_KEY,
@@ -48,7 +49,7 @@ const AddMealForm = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    description: '', // Initialized as an empty string
     prepTime: '',
     cookTime: '',
     servings: '',
@@ -144,6 +145,19 @@ const AddMealForm = () => {
     }
   };
 
+  const fetchDietaryTags = async () => {
+    const { data, error } = await supabase
+      .from('dietary_tags')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching dietary tags:', error);
+      return [];
+    }
+
+    return data;
+  };
+
   const handleGenerateRecipe = async () => {
     if (!imageFile) {
       setError('Please upload an image');
@@ -153,26 +167,40 @@ const AddMealForm = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Upload the image to Supabase storage
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('meal-images')
         .upload(fileName, imageFile);
 
-      if (uploadError) throw uploadError;
-      
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        setError('Failed to upload the image. Please try again.');
+        setLoading(false);
+        return;
+      }
+
       // Get the public URL of the uploaded image
-      const { data: { publicUrl } } = supabase.storage
+      const { data: publicUrlData, error: publicUrlError } = supabase.storage
         .from('meal-images')
         .getPublicUrl(fileName);
 
-      // Analyze the image with AI
+      if (publicUrlError || !publicUrlData.publicUrl) {
+        console.error('Error getting public URL:', publicUrlError);
+        setError('Failed to retrieve the public URL for the uploaded image.');
+        setLoading(false);
+        return;
+      }
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Use the public URL for AI analysis
       const mealData = await analyzeImageWithAI(publicUrl, formData.description);
 
-      // Update form data with AI-generated content
+      // Update form data with AI-generated content and the image URL
       setFormData({
         ...formData,
         name: mealData.name,
@@ -183,9 +211,9 @@ const AddMealForm = () => {
         ingredients: mealData.ingredients,
         instructions: mealData.instructions,
         categories: mealData.categories,
-        dietaryTags: mealData.dietaryTags
+        dietaryTags: mealData.dietaryTags,
+        image: publicUrl
       });
-
     } catch (error) {
       console.error('Error generating recipe:', error);
       setError(`Failed to generate recipe: ${error.message}`);
@@ -196,8 +224,43 @@ const AddMealForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement form submission to database
-    console.log('Form data to submit:', formData);
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+  
+    if (!formData.image) {
+      setError('Image upload failed. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    // Remove the user-provided description from the formData before saving
+    const { description, ...dataToSave } = formData;
+
+    try {
+      // Save the meal to the database without the description
+      const savedMeal = await createMeal(dataToSave);
+      console.log('Meal saved:', savedMeal);
+      setSuccess(true);
+      setError('');
+      setFormData({
+        name: '',
+        prepTime: '',
+        cookTime: '',
+        servings: '',
+        difficulty: '',
+        ingredients: [],
+        instructions: [],
+        categories: [],
+        dietaryTags: [],
+        image: '' // Reset image field
+      });
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      setError('Failed to save the meal to the database. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -302,8 +365,8 @@ const AddMealForm = () => {
             <Button
               variant="contained"
               onClick={handleGenerateRecipe}
-              disabled={!imageFile || !formData.description.trim()}
-              sx={{ mb: 3 }}
+              disabled={!imageFile || !(formData.description?.trim())}
+              sx={{ mb: 3, width: '100%' }}
             >
               Generate Recipe
             </Button>
@@ -495,4 +558,4 @@ const AddMealForm = () => {
   );
 };
 
-export default AddMealForm; 
+export default AddMealForm;
