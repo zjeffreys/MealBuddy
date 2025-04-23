@@ -63,4 +63,4 @@ logs
 supabase/.temp
 supabase/.wrangler
 supabase/.wrangler.toml
-supabase/.env 
+supabase/.env node_modules/
