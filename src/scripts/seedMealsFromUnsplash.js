@@ -20,20 +20,6 @@ const rl = readline.createInterface({
 // Terminal spinner for loading states
 const spinner = ora();
 
-// Function to track photo download as required by Unsplash API Terms
-async function trackPhotoDownload(photoId) {
-  try {
-    await fetch(`https://api.unsplash.com/photos/${photoId}/download`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_API_KEY}`
-      }
-    });
-  } catch (error) {
-    console.error(chalk.yellow('Warning: Failed to track photo download'), error);
-  }
-}
-
 // Function to get meal data from GPT-4 Vision
 async function getMealDataFromImage(imageUrl) {
   try {
@@ -62,26 +48,17 @@ async function getMealDataFromImage(imageUrl) {
   }
 }
 
-// Function to upload image to Supabase with proper attribution
-async function uploadImageToSupabase(imageUrl, mealName, unsplashData) {
+// Function to upload image to Supabase
+async function uploadImageToSupabase(imageUrl, mealName) {
   try {
     spinner.start('Uploading image to Supabase...');
     const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const filename = `${Date.now()}-${mealName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.jpg`;
     
-    // Track the download as required by Unsplash API Terms
-    await trackPhotoDownload(unsplashData.id);
-    
     const { error } = await supabase.storage
       .from('meal-images')
       .upload(filename, imageResponse.data, {
-        contentType: 'image/jpeg',
-        metadata: {
-          unsplash_photo_id: unsplashData.id,
-          photographer: unsplashData.user.name,
-          photographer_url: unsplashData.user.links.html,
-          unsplash_url: unsplashData.links.html
-        }
+        contentType: 'image/jpeg'
       });
 
     if (error) throw error;
@@ -94,8 +71,8 @@ async function uploadImageToSupabase(imageUrl, mealName, unsplashData) {
   }
 }
 
-// Function to save meal data to database with proper attribution
-async function saveMealToDatabase(mealData, imageFilename, unsplashData) {
+// Function to save meal data to database
+async function saveMealToDatabase(mealData, imageFilename) {
   try {
     spinner.start('Saving meal to database...');
     const { error } = await supabase.from('meals').insert([{
@@ -109,13 +86,7 @@ async function saveMealToDatabase(mealData, imageFilename, unsplashData) {
       difficulty: mealData.difficulty,
       prep_time: Math.floor(Math.random() * 30) + 10,
       cook_time: Math.floor(Math.random() * 30) + 10,
-      servings: Math.floor(Math.random() * 4) + 2,
-      attribution: {
-        photographer: unsplashData.user.name,
-        photographer_url: unsplashData.user.links.html,
-        unsplash_url: unsplashData.links.html,
-        unsplash_photo_id: unsplashData.id
-      }
+      servings: Math.floor(Math.random() * 4) + 2
     }]);
 
     if (error) throw error;
@@ -128,59 +99,44 @@ async function saveMealToDatabase(mealData, imageFilename, unsplashData) {
   }
 }
 
-// Main seeding function with rate limiting
-async function seedMealsFromUnsplash(count = 100) {
+// Main seeding function
+async function seedMeals(count = 100) {
   console.log(chalk.blue('\n🚀 Starting meal seeding process...\n'));
-  console.log(chalk.gray('This process will comply with Unsplash API Terms, including proper attribution and download tracking.\n'));
   
   try {
-    // Fetch food images from Unsplash with proper attribution
-    spinner.start('Fetching images from Unsplash...');
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=food&per_page=${count}`,
-      {
-        headers: { 
-          Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_API_KEY}` 
-        }
-      }
-    );
-    const images = await response.json();
-    spinner.succeed(`Fetched ${images.results.length} images from Unsplash`);
-
     let successCount = 0;
     let failCount = 0;
 
-    // Process images with rate limiting
-    for (const [index, image] of images.results.entries()) {
-      console.log(chalk.yellow(`\nProcessing image ${index + 1}/${images.results.length}`));
+    for (let i = 0; i < count; i++) {
+      console.log(chalk.yellow(`\nProcessing meal ${i + 1}/${count}`));
       
-      const mealData = await getMealDataFromImage(image.urls.regular);
+      const imageUrl = `https://via.placeholder.com/300?text=Meal+${i + 1}`;
+      const mealData = await getMealDataFromImage(imageUrl);
       if (!mealData) {
         failCount++;
         continue;
       }
 
-      const imageFilename = await uploadImageToSupabase(image.urls.regular, mealData.name, image);
+      const imageFilename = await uploadImageToSupabase(imageUrl, mealData.name);
       if (!imageFilename) {
         failCount++;
         continue;
       }
 
-      const saved = await saveMealToDatabase(mealData, imageFilename, image);
+      const saved = await saveMealToDatabase(mealData, imageFilename);
       if (saved) {
         successCount++;
       } else {
         failCount++;
       }
 
-      // Add delay between requests to respect rate limits
+      // Add delay between requests
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     console.log(chalk.green(`\n✅ Seeding complete!`));
     console.log(chalk.green(`Successfully added: ${successCount} meals`));
     console.log(chalk.red(`Failed to add: ${failCount} meals`));
-    console.log(chalk.gray('\nAll images are properly attributed to their photographers and Unsplash.'));
     
   } catch (error) {
     console.error(chalk.red('\n❌ Error during seeding process:'), error);
@@ -190,11 +146,10 @@ async function seedMealsFromUnsplash(count = 100) {
 }
 
 // Start the seeding process
-console.log(chalk.blue('Meal Buddy - Unsplash Seeder'));
-console.log(chalk.gray('This script will seed your database with meals from Unsplash\n'));
-console.log(chalk.yellow('⚠️  Important: This script complies with Unsplash API Terms, including proper attribution and download tracking.\n'));
+console.log(chalk.blue('Meal Buddy - Seeder'));
+console.log(chalk.gray('This script will seed your database with meals\n'));
 
 rl.question(chalk.yellow('How many meals would you like to seed? (default: 100): '), (answer) => {
   const count = parseInt(answer) || 100;
-  seedMealsFromUnsplash(count);
-}); 
+  seedMeals(count);
+});

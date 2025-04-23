@@ -3,7 +3,7 @@ export const meals = [
     id: '1',
     name: 'Grilled Chicken Quinoa Bowl',
     description: 'A protein-packed bowl with grilled chicken, quinoa, roasted vegetables, and tahini dressing',
-    image: 'https://source.unsplash.com/featured/?quinoa-bowl',
+    image: 'placeholder-image-quinoa-bowl.jpg',
     category: ['lunch', 'dinner'],
     dietaryInfo: {
       calories: 450,
@@ -40,7 +40,7 @@ export const meals = [
     id: '2',
     name: 'Overnight Oats with Berries',
     description: 'Creamy overnight oats topped with fresh berries, honey, and nuts',
-    image: 'https://source.unsplash.com/featured/?overnight-oats',
+    image: 'placeholder-image-overnight-oats.jpg',
     category: ['breakfast'],
     dietaryInfo: {
       calories: 350,
@@ -74,7 +74,7 @@ export const meals = [
     id: '3',
     name: 'Mediterranean Chickpea Salad',
     description: 'Fresh and vibrant salad with chickpeas, vegetables, and feta cheese',
-    image: 'https://source.unsplash.com/featured/?chickpea-salad',
+    image: 'placeholder-image-chickpea-salad.jpg',
     category: ['lunch', 'dinner'],
     dietaryInfo: {
       calories: 380,
@@ -111,7 +111,7 @@ export const meals = [
     id: '4',
     name: 'Salmon with Roasted Vegetables',
     description: 'Baked salmon fillet with seasonal roasted vegetables and herbs',
-    image: 'https://source.unsplash.com/featured/?salmon-dinner',
+    image: 'placeholder-image-salmon-dinner.jpg',
     category: ['dinner'],
     dietaryInfo: {
       calories: 520,
@@ -147,7 +147,7 @@ export const meals = [
     id: '5',
     name: 'Green Smoothie Bowl',
     description: 'Nutrient-rich smoothie bowl with spinach, banana, and toppings',
-    image: 'https://source.unsplash.com/featured/?smoothie-bowl',
+    image: 'placeholder-image-smoothie-bowl.jpg',
     category: ['breakfast', 'snack'],
     dietaryInfo: {
       calories: 320,
@@ -214,4 +214,4 @@ export const dietaryTags = [
   { id: 'meal-prep-friendly', label: 'Meal Prep', icon: '🥡' },
   { id: 'quick', label: 'Quick & Easy', icon: '⚡' },
   { id: 'mediterranean', label: 'Mediterranean', icon: '🫒' },
-]; 
+];
