@@ -1,215 +1,210 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Typography,
-  TextField,
   Button,
   Paper,
+  CircularProgress,
+  Alert,
+  TextField,
   Grid,
-  Chip,
-  Stack,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
-  OutlinedInput,
-  Alert,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
+  MenuItem,
+  Chip,
+  Autocomplete,
 } from '@mui/material';
-import { mealCategories, dietaryTags } from '../data/meals';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { styled } from '@mui/material/styles';
+import { supabase } from '../lib/supabaseClient';
+import OpenAI from 'openai';
+import { useNavigate } from 'react-router-dom';
 
-const AddMealForm = ({ onSubmit, onCancel }) => {
+const openai = new OpenAI({
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
+const AddMealForm = () => {
+  const navigate = useNavigate();
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: '',
-    category: [],
-    dietaryInfo: {
-      calories: '',
-      protein: '',
-      carbs: '',
-      fat: '',
-      fiber: '',
-    },
-    tags: [],
     prepTime: '',
     cookTime: '',
-    difficulty: 'easy',
     servings: '',
-    ingredients: [{ item: '', amount: '', unit: '' }],
-    instructions: [''],
+    difficulty: '',
+    ingredients: [],
+    instructions: [],
+    categories: [],
+    dietaryTags: []
   });
 
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-    // Clear error when field is modified
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+
+      // Create a preview URL for the image
+      const previewUrl = URL.createObjectURL(file);
+      setImageFile(file);
+      setImagePreview(previewUrl);
+      setError('');
     }
   };
 
-  const handleCategoryChange = (event) => {
-    setFormData(prev => ({
-      ...prev,
-      category: event.target.value
-    }));
-  };
-
-  const handleTagsChange = (event) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: event.target.value
-    }));
-  };
-
-  const handleIngredientChange = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.map((ing, i) => 
-        i === index ? { ...ing, [field]: value } : ing
-      )
-    }));
-  };
-
-  const addIngredient = () => {
-    setFormData(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, { item: '', amount: '', unit: '' }]
-    }));
-  };
-
-  const removeIngredient = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleInstructionChange = (index, value) => {
-    setFormData(prev => ({
-      ...prev,
-      instructions: prev.instructions.map((inst, i) => 
-        i === index ? value : inst
-      )
-    }));
-  };
-
-  const addInstruction = () => {
-    setFormData(prev => ({
-      ...prev,
-      instructions: [...prev.instructions, '']
-    }));
-  };
-
-  const removeInstruction = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      instructions: prev.instructions.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleImageChange({ target: { files: [file] } });
+  }, []);
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    handleImageChange({ target: { files: [file] } });
+  };
+
+  const analyzeImageWithAI = async (imageUrl, description) => {
+    try {
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Analyze this food image and provide the following information in JSON format: name, prepTime (in minutes), cookTime (in minutes), servings, difficulty (easy/medium/hard), ingredients (array of objects with item, amount, and unit), and instructions (array of steps). Also suggest appropriate categories and dietary tags. Use this description as additional context: "${description}"`
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: imageUrl
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 2000
+      });
+
+      // Extract and parse the JSON from the response
+      const content = aiResponse.choices[0].message.content;
+      try {
+        // Remove the code block markers if present
+        const jsonString = content.replace(/```json\n|\n```/g, '').trim();
+        return JSON.parse(jsonString);
+      } catch (parseError) {
+        console.error('Error parsing AI response:', content);
+        throw new Error('Failed to parse AI response');
+      }
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      throw new Error(`Failed to analyze image with AI: ${error.message}`);
+    }
+  };
+
+  const handleGenerateRecipe = async () => {
+    if (!imageFile) {
+      setError('Please upload an image');
       return;
     }
 
-    const newMeal = {
-      ...formData,
-      id: String(Date.now()),
-      dietaryInfo: {
-        calories: Number(formData.dietaryInfo.calories),
-        protein: Number(formData.dietaryInfo.protein),
-        carbs: Number(formData.dietaryInfo.carbs),
-        fat: Number(formData.dietaryInfo.fat),
-        fiber: Number(formData.dietaryInfo.fiber),
-      },
-      prepTime: Number(formData.prepTime),
-      cookTime: Number(formData.cookTime),
-      servings: Number(formData.servings),
-    };
-    
-    onSubmit(newMeal);
-    setSubmitted(true);
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Upload the image to Supabase storage
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('meal-images')
+        .upload(fileName, imageFile);
+
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL of the uploaded image
+      const { data: { publicUrl } } = supabase.storage
+        .from('meal-images')
+        .getPublicUrl(fileName);
+
+      // Analyze the image with AI
+      const mealData = await analyzeImageWithAI(publicUrl, formData.description);
+
+      // Update form data with AI-generated content
+      setFormData({
+        ...formData,
+        name: mealData.name,
+        prepTime: mealData.prepTime,
+        cookTime: mealData.cookTime,
+        servings: mealData.servings,
+        difficulty: mealData.difficulty,
+        ingredients: mealData.ingredients,
+        instructions: mealData.instructions,
+        categories: mealData.categories,
+        dietaryTags: mealData.dietaryTags
+      });
+
+    } catch (error) {
+      console.error('Error generating recipe:', error);
+      setError(`Failed to generate recipe: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.image.trim()) newErrors.image = 'Image URL is required';
-    if (!formData.prepTime) newErrors.prepTime = 'Prep time is required';
-    if (!formData.cookTime) newErrors.cookTime = 'Cook time is required';
-    if (!formData.servings) newErrors.servings = 'Number of servings is required';
-    if (formData.ingredients.some(ing => !ing.item.trim())) {
-      newErrors.ingredients = 'All ingredients must be filled out';
-    }
-    if (formData.instructions.some(inst => !inst.trim())) {
-      newErrors.instructions = 'All instructions must be filled out';
-    }
-    return newErrors;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // TODO: Implement form submission to database
+    console.log('Form data to submit:', formData);
   };
 
-  if (submitted) {
+  if (loading) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Alert severity="success" sx={{ mb: 2 }}>
-          Thank you for contributing! Your meal has been added successfully.
-        </Alert>
-        <Button variant="contained" onClick={() => {
-          setSubmitted(false);
-          setFormData({
-            name: '',
-            description: '',
-            image: '',
-            category: [],
-            dietaryInfo: {
-              calories: '',
-              protein: '',
-              carbs: '',
-              fat: '',
-              fiber: '',
-            },
-            tags: [],
-            prepTime: '',
-            cookTime: '',
-            difficulty: 'easy',
-            servings: '',
-            ingredients: [{ item: '', amount: '', unit: '' }],
-            instructions: [''],
-          });
-        }}>
-          Add Another Meal
-        </Button>
-        <Button sx={{ ml: 2 }} onClick={onCancel}>
-          Return to Meal Planner
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Analyzing your image and generating recipe details...</Typography>
       </Box>
     );
   }
@@ -217,267 +212,285 @@ const AddMealForm = ({ onSubmit, onCancel }) => {
   return (
     <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" gutterBottom>
-        Add Your Recipe
+        Add a New Recipe
       </Typography>
       <Typography variant="body1" color="text.secondary" paragraph>
-        Share your favorite recipe with the MealBuddy community! Please provide as much detail as possible to help others recreate your dish.
+        Upload an image of your dish and provide a description. Our AI will analyze it to create a complete recipe!
       </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <TextField
-            required
-            fullWidth
-            label="Recipe Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            required
-            fullWidth
-            multiline
-            rows={3}
-            label="Description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            error={!!errors.description}
-            helperText={errors.description}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            required
-            fullWidth
-            label="Image URL"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            error={!!errors.image}
-            helperText={errors.image || "Provide a URL to an image of your dish"}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required>
-            <InputLabel>Categories</InputLabel>
-            <Select
-              multiple
-              value={formData.category}
-              onChange={handleCategoryChange}
-              input={<OutlinedInput label="Categories" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip 
-                      key={value} 
-                      label={mealCategories.find(cat => cat.id === value)?.name} 
-                    />
-                  ))}
-                </Box>
-              )}
+      <Box sx={{ mt: 4 }}>
+        <Box 
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          sx={{ 
+            textAlign: 'center',
+            border: '2px dashed',
+            borderColor: isDragging ? 'primary.main' : 'grey.300',
+            borderRadius: 2,
+            p: 4,
+            mb: 3,
+            backgroundColor: isDragging ? 'rgba(25, 118, 210, 0.04)' : '#fafafa',
+            transition: 'all 0.2s ease-in-out',
+            cursor: 'pointer',
+            '&:hover': {
+              borderColor: 'primary.main',
+              backgroundColor: 'rgba(25, 118, 210, 0.04)'
+            }
+          }}
+        >
+          {!imagePreview ? (
+            <Box
+              component="label"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+                cursor: 'pointer'
+              }}
             >
-              {mealCategories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+              <CloudUploadIcon 
+                sx={{ 
+                  fontSize: 48,
+                  color: 'primary.main',
+                  opacity: 0.7
+                }} 
+              />
+              <Box>
+                <Typography variant="h6" color="primary">
+                  Upload Image
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Click to browse or drag and drop
+                </Typography>
+              </Box>
+              <VisuallyHiddenInput
+                type="file"
+                accept="image/*"
+                onChange={handleFileInputChange}
+              />
+            </Box>
+          ) : (
+            <Box
+              component="img"
+              src={imagePreview}
+              alt="Preview"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: 300,
+                borderRadius: 1,
+              }}
+            />
+          )}
+        </Box>
 
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required>
-            <InputLabel>Tags</InputLabel>
-            <Select
-              multiple
-              value={formData.tags}
-              onChange={handleTagsChange}
-              input={<OutlinedInput label="Tags" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip 
-                      key={value} 
-                      label={dietaryTags.find(tag => tag.id === value)?.label} 
-                    />
-                  ))}
-                </Box>
-              )}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              multiline
+              rows={3}
+              placeholder="Describe your dish, including any special ingredients or cooking methods..."
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              onClick={handleGenerateRecipe}
+              disabled={!imageFile || !formData.description.trim()}
+              sx={{ mb: 3 }}
             >
-              {dietaryTags.map((tag) => (
-                <MenuItem key={tag.id} value={tag.id}>
-                  {tag.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+              Generate Recipe
+            </Button>
+          </Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
-            Nutritional Information
-          </Typography>
-          <Grid container spacing={2}>
-            {Object.keys(formData.dietaryInfo).map((key) => (
-              <Grid item xs={6} sm={4} md={2.4} key={key}>
+          {formData.name && (
+            <>
+              <Grid item xs={12}>
                 <TextField
-                  required
                   fullWidth
-                  type="number"
-                  label={key.charAt(0).toUpperCase() + key.slice(1)}
-                  name={`dietaryInfo.${key}`}
-                  value={formData.dietaryInfo[key]}
-                  onChange={handleChange}
-                  error={!!errors[`dietaryInfo.${key}`]}
-                  helperText={errors[`dietaryInfo.${key}`]}
+                  label="Recipe Name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </Grid>
-            ))}
-          </Grid>
-        </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <TextField
-            required
-            fullWidth
-            type="number"
-            label="Prep Time (minutes)"
-            name="prepTime"
-            value={formData.prepTime}
-            onChange={handleChange}
-            error={!!errors.prepTime}
-            helperText={errors.prepTime}
-          />
-        </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Prep Time (minutes)"
+                  type="number"
+                  value={formData.prepTime}
+                  onChange={(e) => setFormData({ ...formData, prepTime: e.target.value })}
+                />
+              </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <TextField
-            required
-            fullWidth
-            type="number"
-            label="Cook Time (minutes)"
-            name="cookTime"
-            value={formData.cookTime}
-            onChange={handleChange}
-            error={!!errors.cookTime}
-            helperText={errors.cookTime}
-          />
-        </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Cook Time (minutes)"
+                  type="number"
+                  value={formData.cookTime}
+                  onChange={(e) => setFormData({ ...formData, cookTime: e.target.value })}
+                />
+              </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <TextField
-            required
-            fullWidth
-            type="number"
-            label="Servings"
-            name="servings"
-            value={formData.servings}
-            onChange={handleChange}
-            error={!!errors.servings}
-            helperText={errors.servings}
-          />
-        </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Servings"
+                  type="number"
+                  value={formData.servings}
+                  onChange={(e) => setFormData({ ...formData, servings: e.target.value })}
+                />
+              </Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
-            Ingredients
-          </Typography>
-          {errors.ingredients && (
-            <Typography color="error" variant="caption">
-              {errors.ingredients}
-            </Typography>
-          )}
-          <List>
-            {formData.ingredients.map((ingredient, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemText>
-                  <TextField
-                    fullWidth
-                    label={`Ingredient ${index + 1}`}
-                    value={ingredient.item}
-                    onChange={(e) => handleIngredientChange(index, 'item', e.target.value)}
-                    margin="dense"
-                  />
-                </ListItemText>
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    onClick={() => removeIngredient(index)}
-                    disabled={formData.ingredients.length === 1}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Difficulty</InputLabel>
+                  <Select
+                    value={formData.difficulty}
+                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+                    label="Difficulty"
                   >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-          <Button
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={addIngredient}
-            sx={{ mt: 1 }}
-          >
-            Add Ingredient
-          </Button>
-        </Grid>
+                    <MenuItem value="easy">Easy</MenuItem>
+                    <MenuItem value="medium">Medium</MenuItem>
+                    <MenuItem value="hard">Hard</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
-            Instructions
-          </Typography>
-          {errors.instructions && (
-            <Typography color="error" variant="caption">
-              {errors.instructions}
-            </Typography>
-          )}
-          <List>
-            {formData.instructions.map((instruction, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemText>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Ingredients
+                </Typography>
+                {formData.ingredients.map((ingredient, index) => (
+                  <Box key={index} sx={{ mb: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={5}>
+                        <TextField
+                          fullWidth
+                          label="Item"
+                          value={ingredient.item}
+                          onChange={(e) => {
+                            const newIngredients = [...formData.ingredients];
+                            newIngredients[index].item = e.target.value;
+                            setFormData({ ...formData, ingredients: newIngredients });
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={3}>
+                        <TextField
+                          fullWidth
+                          label="Amount"
+                          type="number"
+                          value={ingredient.amount}
+                          onChange={(e) => {
+                            const newIngredients = [...formData.ingredients];
+                            newIngredients[index].amount = e.target.value;
+                            setFormData({ ...formData, ingredients: newIngredients });
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          label="Unit"
+                          value={ingredient.unit}
+                          onChange={(e) => {
+                            const newIngredients = [...formData.ingredients];
+                            newIngredients[index].unit = e.target.value;
+                            setFormData({ ...formData, ingredients: newIngredients });
+                          }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Instructions
+                </Typography>
+                {formData.instructions.map((instruction, index) => (
                   <TextField
+                    key={index}
                     fullWidth
-                    label={`Step ${index + 1}`}
-                    value={instruction}
-                    onChange={(e) => handleInstructionChange(index, e.target.value)}
-                    margin="dense"
                     multiline
+                    rows={2}
+                    value={instruction}
+                    onChange={(e) => {
+                      const newInstructions = [...formData.instructions];
+                      newInstructions[index] = e.target.value;
+                      setFormData({ ...formData, instructions: newInstructions });
+                    }}
+                    sx={{ mb: 1 }}
                   />
-                </ListItemText>
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    onClick={() => removeInstruction(index)}
-                    disabled={formData.instructions.length === 1}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-          <Button
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={addInstruction}
-            sx={{ mt: 1 }}
-          >
-            Add Step
-          </Button>
-        </Grid>
+                ))}
+              </Grid>
 
-        <Grid item xs={12}>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button onClick={onCancel}>Cancel</Button>
-            <Button type="submit" variant="contained">Submit Recipe</Button>
-          </Stack>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Categories
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formData.categories.map((category, index) => (
+                    <Chip
+                      key={index}
+                      label={category}
+                      onDelete={() => {
+                        const newCategories = formData.categories.filter((_, i) => i !== index);
+                        setFormData({ ...formData, categories: newCategories });
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Dietary Tags
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formData.dietaryTags.map((tag, index) => (
+                    <Chip
+                      key={index}
+                      label={tag}
+                      onDelete={() => {
+                        const newTags = formData.dietaryTags.filter((_, i) => i !== index);
+                        setFormData({ ...formData, dietaryTags: newTags });
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
+                >
+                  Save Recipe
+                </Button>
+              </Grid>
+            </>
+          )}
         </Grid>
-      </Grid>
+          
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+      </Box>
     </Paper>
   );
 };

@@ -1,58 +1,69 @@
-import { meals, mealCategories, dietaryTags } from '../data/meals';
+import { supabase } from '../lib/supabaseClient';
 
-export const getMealsByFilters = ({
+// Helper function to get the public URL for an image
+export const getImageUrl = (path) => {
+  if (!path) return null;
+  const { data } = supabase.storage
+    .from('meal-images')
+    .getPublicUrl(path);
+  return data.publicUrl;
+};
+
+export const getMealsByFilters = async ({
   categories = [],
   tags = [],
   searchQuery = '',
   maxCalories = null,
   maxPrepTime = null,
 }) => {
-  return meals.filter(meal => {
-    // Filter by categories
-    if (categories.length > 0 && !meal.category.some(c => categories.includes(c))) {
-      return false;
-    }
+  let query = supabase
+    .from('meals')
+    .select('*');
 
-    // Filter by tags
-    if (tags.length > 0 && !meal.tags.some(t => tags.includes(t))) {
-      return false;
-    }
+  // Apply filters
+  if (categories.length > 0) {
+    query = query.contains('category', categories);
+  }
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesName = meal.name.toLowerCase().includes(query);
-      const matchesDescription = meal.description.toLowerCase().includes(query);
-      const matchesTags = meal.tags.some(tag => tag.toLowerCase().includes(query));
-      
-      if (!matchesName && !matchesDescription && !matchesTags) {
-        return false;
-      }
-    }
+  if (tags.length > 0) {
+    query = query.contains('tags', tags);
+  }
 
-    // Filter by max calories
-    if (maxCalories && meal.dietaryInfo.calories > maxCalories) {
-      return false;
-    }
+  if (searchQuery) {
+    query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+  }
 
-    // Filter by max prep time
-    if (maxPrepTime && meal.prepTime > maxPrepTime) {
-      return false;
-    }
+  if (maxCalories) {
+    query = query.lte('dietary_info->calories', maxCalories);
+  }
 
-    return true;
-  });
+  if (maxPrepTime) {
+    query = query.lte('prep_time', maxPrepTime);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching meals:', error);
+    return [];
+  }
+
+  // Add public URLs for images
+  return data.map(meal => ({
+    ...meal,
+    imageUrl: getImageUrl(meal.image)
+  }));
 };
 
-export const generateMealPlan = ({
+export const generateMealPlan = async ({
   selectedDates = [],
   selectedMealTypes = [],
   preferences = '',
   dietaryRestrictions = [],
   calorieTarget = null,
 }) => {
-  // Filter meals based on preferences and restrictions
-  let availableMeals = getMealsByFilters({
+  // Get available meals based on filters
+  const availableMeals = await getMealsByFilters({
     categories: selectedMealTypes,
     tags: dietaryRestrictions,
     maxCalories: calorieTarget,
@@ -82,30 +93,125 @@ export const generateMealPlan = ({
   return mealPlan;
 };
 
-export const getMealCategories = () => mealCategories;
+export const getMealCategories = async () => {
+  const { data, error } = await supabase
+    .from('meal_categories')
+    .select('*');
 
-export const getDietaryTags = () => dietaryTags;
+  if (error) {
+    console.error('Error fetching meal categories:', error);
+    return [];
+  }
 
-export const getMealById = (id) => meals.find(meal => meal.id === id);
+  return data;
+};
 
-export const getRelatedMeals = (meal, limit = 3) => {
+export const getDietaryTags = async () => {
+  const { data, error } = await supabase
+    .from('dietary_tags')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching dietary tags:', error);
+    return [];
+  }
+
+  return data;
+};
+
+export const getMealById = async (id) => {
+  const { data, error } = await supabase
+    .from('meals')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching meal by id:', error);
+    return null;
+  }
+
+  return {
+    ...data,
+    imageUrl: getImageUrl(data.image)
+  };
+};
+
+export const getRelatedMeals = async (meal, limit = 3) => {
   if (!meal) return [];
 
-  // Find meals with similar tags or categories
-  const relatedMeals = meals
-    .filter(m => m.id !== meal.id) // Exclude the current meal
-    .map(m => {
-      // Calculate similarity score based on shared tags and categories
-      const sharedTags = m.tags.filter(tag => meal.tags.includes(tag)).length;
-      const sharedCategories = m.category.filter(cat => meal.category.includes(cat)).length;
-      
-      return {
-        ...m,
-        similarityScore: (sharedTags * 2) + sharedCategories, // Tags are weighted more heavily
-      };
-    })
+  const { data, error } = await supabase
+    .from('meals')
+    .select('*')
+    .neq('id', meal.id);
+
+  if (error) {
+    console.error('Error fetching related meals:', error);
+    return [];
+  }
+
+  // Calculate similarity scores and add image URLs
+  const relatedMeals = data
+    .map(m => ({
+      ...m,
+      imageUrl: getImageUrl(m.image),
+      similarityScore: (
+        m.tags.filter(tag => meal.tags.includes(tag)).length * 2 +
+        m.category.filter(cat => meal.category.includes(cat)).length
+      ),
+    }))
     .sort((a, b) => b.similarityScore - a.similarityScore)
     .slice(0, limit);
 
   return relatedMeals;
+};
+
+export const createMeal = async (mealData) => {
+  try {
+    // Fetch categories and tags first
+    const [categoriesData, tagsData] = await Promise.all([
+      getMealCategories(),
+      getDietaryTags()
+    ]);
+
+    // Format the data to match the database schema
+    const formattedMealData = {
+      name: mealData.name,
+      description: mealData.description,
+      image: mealData.image,
+      category: mealData.category.map(id => categoriesData.find(cat => cat.id === id)?.name || id),
+      tags: mealData.tags.map(id => tagsData.find(tag => tag.id === id)?.name || id),
+      prep_time: Number(mealData.prepTime),
+      cook_time: Number(mealData.cookTime),
+      servings: Number(mealData.servings),
+      difficulty: mealData.difficulty,
+      ingredients: mealData.ingredients.map(ing => ({
+        item: ing.item,
+        amount: Number(ing.amount),
+        unit: ing.unit
+      })),
+      instructions: mealData.instructions.filter(inst => inst.trim() !== '')
+    };
+
+    console.log('Formatted meal data:', formattedMealData);
+
+    const { data, error } = await supabase
+      .from('meals')
+      .insert([formattedMealData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating meal:', error);
+      throw error;
+    }
+
+    return {
+      ...data,
+      imageUrl: getImageUrl(data.image)
+    };
+  } catch (error) {
+    console.error('Error in createMeal:', error);
+    throw error;
+  }
 }; 

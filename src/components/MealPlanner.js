@@ -88,7 +88,7 @@ const weekDays = [
   { id: 'sunday', label: 'Sun' },
 ];
 
-function MealPlanner() {
+function MealPlanner({ showAddMealForm, setShowAddMealForm }) {
   const [activeStep, setActiveStep] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -106,7 +106,6 @@ function MealPlanner() {
   const [thinkingText, setThinkingText] = useState('');
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const [showAddMealForm, setShowAddMealForm] = useState(false);
 
   const handlePlanTypeChange = (event, newType) => {
     if (newType !== null) {
@@ -225,9 +224,7 @@ function MealPlanner() {
 
   const handleAddMeal = (newMeal) => {
     // Here you would typically make an API call to save the meal
-    // For now, we'll just console.log it
     console.log('New meal to be added:', newMeal);
-    // You can add logic here to update the meals array
     setShowAddMealForm(false);
   };
 
@@ -446,81 +443,144 @@ function MealPlanner() {
 
   return (
     <Box sx={{ pb: 4 }}>
-      <AppBar 
-        position="static" 
-        color="transparent" 
-        elevation={0}
-        sx={{ mb: 4 }}
-      >
-        <Toolbar sx={{ justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setShowAddMealForm(true)}
+      <Grid container spacing={4} alignItems="center">
+        <Grid item xs={12} md={6}>
+          <Box sx={{ 
+            pr: { md: 4 },
+            position: 'relative',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              bottom: -20,
+              left: 0,
+              width: '60px',
+              height: '4px',
+              backgroundColor: 'primary.main',
+              borderRadius: '2px',
+            }
+          }}>
+            <Typography
+              variant="h1"
+              sx={{
+                mb: 3,
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                fontWeight: 800,
+                lineHeight: 1.1,
+                background: 'linear-gradient(45deg, #5ebd21 30%, #98EE99 90%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                letterSpacing: '-0.02em',
+                textTransform: 'capitalize',
+              }}
+            >
+              Meal Planning Made Easy
+            </Typography>
+            
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ 
+                mb: 4,
+                fontSize: { xs: '1.1rem', md: '1.25rem' },
+                lineHeight: 1.6,
+                maxWidth: '90%',
+                opacity: 0.9,
+                fontWeight: 600,
+              }}
+            >
+              Tell us what you're looking for, and we'll create a personalized meal plan that fits your lifestyle and preferences perfectly.
+            </Typography>
+
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              flexWrap: 'wrap',
+              mt: 4 
+            }}>
+              <Typography variant="body2" color="text.secondary" sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+                '&::before': {
+                  content: '"✓"',
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                }
+              }}>
+                Customized to your taste
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+                '&::before': {
+                  content: '"✓"',
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                }
+              }}>
+                Easy to follow recipes
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+                '&::before': {
+                  content: '"✓"',
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                }
+              }}>
+                Save time and money
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper
+            component="form"
+            onSubmit={handleSubmit}
+            elevation={2}
+            sx={{
+              p: 3,
+              borderRadius: 2,
+            }}
           >
-            Add a Meal
-          </Button>
-        </Toolbar>
-      </AppBar>
-
-      <Typography
-        variant="h1"
-        sx={{
-          mb: 3,
-          textAlign: 'center',
-          fontSize: { xs: '2.5rem', md: '3.5rem' },
-        }}
-      >
-        Meal planning made easy
-      </Typography>
-      
-      <Typography
-        variant="h6"
-        color="text.secondary"
-        sx={{ mb: 4, textAlign: 'center' }}
-      >
-        Tell us what you're looking for, and we'll create a personalized meal plan
-      </Typography>
-
-      <Paper
-        component="form"
-        onSubmit={handleSubmit}
-        elevation={2}
-        sx={{
-          p: 3,
-          maxWidth: 800,
-          mx: 'auto',
-          mb: 6,
-          borderRadius: 2,
-        }}
-      >
-        <Stepper activeStep={activeStep} orientation="vertical">
-          {steps.map((step, index) => (
-            <Step key={step.label}>
-              <StepLabel>{step.label}</StepLabel>
-              <StepContent>
-                <Box sx={{ mb: 2 }}>
-                  {step.content}
-                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                    <Button
-                      variant="contained"
-                      onClick={index === steps.length - 1 ? handleSubmit : handleNext}
-                      disabled={loading || !isStepValid(index)}
-                    >
-                      {index === steps.length - 1 ? 'Generate Plan' : 'Continue'}
-                    </Button>
-                    {index > 0 && (
-                      <Button onClick={handleBack}>
-                        Back
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </StepContent>
-            </Step>
-          ))}
-        </Stepper>
-      </Paper>
+            <Stepper activeStep={activeStep} orientation="vertical">
+              {steps.map((step, index) => (
+                <Step key={step.label}>
+                  <StepLabel>{step.label}</StepLabel>
+                  <StepContent>
+                    <Box sx={{ mb: 2 }}>
+                      {step.content}
+                      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                        <Button
+                          variant="contained"
+                          onClick={index === steps.length - 1 ? handleSubmit : handleNext}
+                          disabled={loading || !isStepValid(index)}
+                        >
+                          {index === steps.length - 1 ? 'Generate Plan' : 'Continue'}
+                        </Button>
+                        {index > 0 && (
+                          <Button onClick={handleBack}>
+                            Back
+                          </Button>
+                        )}
+                      </Box>
+                    </Box>
+                  </StepContent>
+                </Step>
+              ))}
+            </Stepper>
+          </Paper>
+        </Grid>
+      </Grid>
 
       {loading && (
         <Box
