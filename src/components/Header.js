@@ -72,24 +72,26 @@ export default function Header() {
         </Box>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {renderNavButton('/recipes', 'Recipes')}
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleAddMeal}
-            sx={{
-              whiteSpace: 'nowrap',
-              minWidth: 'auto',
-              px: 2,
-              ml: 1,
-              backgroundColor: 'primary.main',
-              '&:hover': {
-                backgroundColor: 'primary.dark',
-              },
-            }}
-          >
-            {isMobile ? 'Add Meal' : 'Add New Meal'}
-          </Button>
+          {user && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAddMeal}
+              sx={{
+                whiteSpace: 'nowrap',
+                minWidth: 'auto',
+                px: 2,
+                ml: 1,
+                backgroundColor: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.dark',
+                },
+              }}
+            >
+              {isMobile ? 'Add Meal' : 'Add New Meal'}
+            </Button>
+          )}
           {user ? (
             <Button
               variant="outlined"
@@ -100,29 +102,47 @@ export default function Header() {
               Sign Out
             </Button>
           ) : (
-            <>
-              <Button
-                variant="outlined"
-                color="inherit"
-                component={Link}
-                to="/login"
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                Sign In
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to="/signup"
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                Sign Up
-              </Button>
-            </>
+            !user && (
+              <>
+                <Button
+                  variant="text"
+                  color="inherit"
+                  component={Link}
+                  to="/login" // Updated to navigate to the login page
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    fontWeight: 'bold',
+                    px: 3,
+                    py: 1,
+                    borderRadius: '4px',
+                  }}
+                >
+                  Log In
+                </Button>
+                <Button
+                  variant="contained"
+                  color="success"
+                  component={Link}
+                  to="/signup" // Updated to navigate to the signup page
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    backgroundColor: '#5ebd21', // Bright green color
+                    '&:hover': {
+                      backgroundColor: '#4ca91b', // Slightly darker green for hover
+                    },
+                    fontWeight: 'bold',
+                    px: 3,
+                    py: 1,
+                    borderRadius: '4px',
+                  }}
+                >
+                  Get Started
+                </Button>
+              </>
+            )
           )}
         </Box>
       </Toolbar>
     </AppBar>
   );
-} 
+}

@@ -228,6 +228,18 @@ function MealPlanner({ showAddMealForm, setShowAddMealForm }) {
     setShowAddMealForm(false);
   };
 
+  const handleDownload = () => {
+    const element = document.createElement('a');
+    const file = new Blob([JSON.stringify(suggestions, null, 2)], {
+      type: 'application/json',
+    });
+    element.href = URL.createObjectURL(file);
+    element.download = 'meal-plan.json';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   const steps = [
     {
       label: 'Choose When to Plan',
@@ -382,20 +394,6 @@ function MealPlanner({ showAddMealForm, setShowAddMealForm }) {
         </FormControl>
       ),
     },
-    {
-      label: 'Describe Your Preferences',
-      content: (
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="E.g., 'I want healthy vegetarian meals' or 'Quick protein-rich recipes'"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          multiline
-          rows={3}
-        />
-      ),
-    },
   ];
 
   const isStepValid = (step) => {
@@ -407,8 +405,6 @@ function MealPlanner({ showAddMealForm, setShowAddMealForm }) {
           : selectedDays.length > 0;
       case 1:
         return Object.values(selectedMeals).some(Boolean);
-      case 2:
-        return prompt.trim().length > 0;
       default:
         return true;
     }
@@ -654,10 +650,21 @@ function MealPlanner({ showAddMealForm, setShowAddMealForm }) {
               </Grid>
             </Box>
           ))}
+
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleDownload}
+              sx={{ mt: 2 }}
+            >
+              Download Meal Plan
+            </Button>
+          </Box>
         </Box>
       )}
     </Box>
   );
 }
 
-export default MealPlanner; 
+export default MealPlanner;

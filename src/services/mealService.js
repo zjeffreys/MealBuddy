@@ -16,6 +16,8 @@ export const getMealsByFilters = async ({
   maxCalories = null,
   maxPrepTime = null,
 }) => {
+  console.log('Filters applied:', { categories, tags, searchQuery, maxCalories, maxPrepTime });
+
   let query = supabase
     .from('meals')
     .select('*');
@@ -48,6 +50,8 @@ export const getMealsByFilters = async ({
     return [];
   }
 
+  console.log('Meals fetched:', data);
+
   // Add public URLs for images
   return data.map(meal => ({
     ...meal,
@@ -62,27 +66,34 @@ export const generateMealPlan = async ({
   dietaryRestrictions = [],
   calorieTarget = null,
 }) => {
+  // Fetch all categories and tags to map names to IDs
+  const allCategories = await getMealCategories();
+  const allTags = await getDietaryTags();
+
+  // Map dietary restrictions to their corresponding IDs
+  const tagIds = dietaryRestrictions.length > 0
+    ? dietaryRestrictions
+    : allTags.map(tag => tag.id);
+
   // Get available meals based on filters
-  const availableMeals = await getMealsByFilters({
-    categories: selectedMealTypes,
-    tags: dietaryRestrictions,
+  let availableMeals = await getMealsByFilters({
+    tags: tagIds,
     maxCalories: calorieTarget,
   });
+
+  // If no meals match the filters, fetch all meals as a fallback
+  if (availableMeals.length === 0) {
+    console.warn('No meals matched the filters. Fetching all meals as a fallback.');
+    availableMeals = await getMealsByFilters({});
+  }
 
   // Create a meal plan for each day
   const mealPlan = selectedDates.map(date => {
     const dayPlan = {};
-    
-    selectedMealTypes.forEach(mealType => {
-      // Filter meals for this specific meal type
-      const mealsForType = availableMeals.filter(meal => 
-        meal.category.includes(mealType)
-      );
 
-      // Randomly select a meal for this type
-      const randomIndex = Math.floor(Math.random() * mealsForType.length);
-      dayPlan[mealType] = mealsForType[randomIndex];
-    });
+    // Ignore meal types and pick up to 5 random meals for the day
+    const randomMeals = availableMeals.sort(() => 0.5 - Math.random()).slice(0, 5);
+    dayPlan['meals'] = randomMeals;
 
     return {
       date,
