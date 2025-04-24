@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import readline from 'readline';
 import chalk from 'chalk';
 import ora from 'ora';
+import fetch from 'node-fetch';
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -144,6 +145,110 @@ async function seedMeals(count = 100) {
     rl.close();
   }
 }
+
+// Function to seed meals with chefs
+const seedMealsWithChefs = async () => {
+  try {
+    // Example data for seeding
+    const meals = [
+      {
+        name: 'Apple Smoothie',
+        description: 'A refreshing apple smoothie for any time of the day.',
+        category: ['Breakfast'],
+        tags: ['Vegan', 'Healthy'],
+        prep_time: 5,
+        cook_time: 0,
+        servings: 2,
+        difficulty: 'Easy',
+        ingredients: [
+          '2 green apples',
+          '1 cup milk',
+          '1 tablespoon honey',
+          '1/2 teaspoon cinnamon powder'
+        ],
+        instructions: [
+          'Core and chop the apples.',
+          'Add apples, milk, honey, and cinnamon to a blender.',
+          'Blend until smooth.',
+          'Serve chilled.'
+        ],
+        image: 'https://paqyyefqkhxkyshwrbxq.supabase.co/storage/v1/object/public/meal-images/pexels_9032667.jpeg',
+        chef: {
+          name: 'Pexels Chef',
+          profile_image: 'https://images.pexels.com/users/avatars/12345/pexels-chef.jpeg'
+        }
+      }
+    ];
+
+    for (const meal of meals) {
+      // Upload chef profile image to Supabase storage
+      const profileImageResponse = await fetch(meal.chef.profile_image);
+      const profileImageBlob = await profileImageResponse.blob();
+      const profileImageName = `${meal.chef.name.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.jpeg`;
+
+      const { data: profileImageData, error: profileImageError } = await supabase.storage
+        .from('chef-profile-images')
+        .upload(profileImageName, profileImageBlob, {
+          contentType: 'image/jpeg'
+        });
+
+      if (profileImageError) {
+        console.error('Error uploading chef profile image:', profileImageError);
+        continue;
+      }
+
+      const profileImageUrl = supabase.storage
+        .from('chef-profile-images')
+        .getPublicUrl(profileImageName).data.publicUrl;
+
+      // Insert chef into the database
+      const { data: chefData, error: chefError } = await supabase
+        .from('chefs')
+        .insert({
+          name: meal.chef.name,
+          profile_image: profileImageUrl
+        })
+        .select()
+        .single();
+
+      if (chefError) {
+        console.error('Error inserting chef:', chefError);
+        continue;
+      }
+
+      // Insert meal into the database with the chef_id
+      const { data: mealData, error: mealError } = await supabase
+        .from('meals')
+        .insert({
+          name: meal.name,
+          description: meal.description,
+          category: meal.category,
+          tags: meal.tags,
+          prep_time: meal.prep_time,
+          cook_time: meal.cook_time,
+          servings: meal.servings,
+          difficulty: meal.difficulty,
+          ingredients: meal.ingredients,
+          instructions: meal.instructions,
+          image: meal.image,
+          chef_id: chefData.id
+        })
+        .select()
+        .single();
+
+      if (mealError) {
+        console.error('Error inserting meal:', mealError);
+        continue;
+      }
+
+      console.log('Successfully added meal with chef:', mealData);
+    }
+  } catch (error) {
+    console.error('Error seeding meals with chefs:', error);
+  }
+};
+
+seedMealsWithChefs();
 
 // Start the seeding process
 console.log(chalk.blue('Meal Buddy - Seeder'));

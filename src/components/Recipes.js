@@ -45,20 +45,60 @@ const Recipes = () => {
 
   const fetchMeals = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch meals with chef data from the database
+      const { data: mealsData, error: mealsError } = await supabase
         .from('meals')
+        .select('*, chef:chefs(id, name, profile_image)');
+
+      if (mealsError) throw mealsError;
+
+      // Fetch dietary tags from the database
+      const { data: tagsData, error: tagsError } = await supabase
+        .from('dietary_tags')
         .select('*');
 
-      if (error) throw error;
+      if (tagsError) throw tagsError;
 
-      console.log('Fetched meals:', data);
+      // Fetch meal categories from the database
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('meal_categories')
+        .select('*');
 
-      // Add image URLs and process the data
-      const processedMeals = data.map(meal => ({
-        ...meal,
-        imageUrl: getImageUrl(meal.image),
-        totalTime: (meal.prep_time || 0) + (meal.cook_time || 0)
-      }));
+      if (categoriesError) throw categoriesError;
+
+      console.log('Fetched meals:', mealsData);
+      console.log('Fetched tags:', tagsData);
+      console.log('Fetched categories:', categoriesData);
+
+      // Map tag IDs to tag names and category IDs to category names
+      const processedMeals = mealsData.map(meal => {
+        const mappedTags = (meal.tags || []).map(tagId => {
+          const tag = tagsData.find(tag => tag.id === tagId);
+          if (!tag) {
+            console.warn(`Unmatched tag ID: ${tagId}`);
+            return `Unknown Tag (${tagId})`; // Include the ID for easier debugging
+          }
+          return tag.name;
+        });
+
+        const mappedCategories = (meal.category || []).map(categoryId => {
+          const category = categoriesData.find(cat => cat.id === categoryId);
+          if (!category) {
+            console.warn(`Unmatched category ID: ${categoryId}`);
+            return `Unknown Category (${categoryId})`; // Include the ID for easier debugging
+          }
+          return category.name;
+        });
+
+        return {
+          ...meal,
+          imageUrl: getImageUrl(meal.image),
+          totalTime: (meal.prep_time || 0) + (meal.cook_time || 0),
+          tags: mappedTags,
+          category: mappedCategories,
+          chef: meal.chef // Include chef data
+        };
+      });
 
       setMeals(processedMeals);
     } catch (error) {
@@ -164,7 +204,7 @@ const Recipes = () => {
                       label={cat}
                       size="small"
                       color="primary"
-                      variant="outlined"
+                      sx={{ backgroundColor: '#1976d2', color: 'white' }} // Improved visibility
                     />
                   ))}
                   {meal.tags && meal.tags.map((tag, index) => (
@@ -173,7 +213,7 @@ const Recipes = () => {
                       label={tag}
                       size="small"
                       color="secondary"
-                      variant="outlined"
+                      sx={{ backgroundColor: '#388e3c', color: 'white' }} // Improved visibility
                     />
                   ))}
                 </Box>
@@ -187,6 +227,32 @@ const Recipes = () => {
                       sx={{ backgroundColor: 'green', color: 'white' }}
                     />
                   ))}
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                  {meal.chef ? (
+                    <>
+                      <img
+                        src={meal.chef.profile_image || 'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg'}
+                        alt={meal.chef.name || 'Anonymous Chef'}
+                        style={{ width: 40, height: 40, borderRadius: '50%' }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {meal.chef.name || 'Anonymous Chef'}
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <img
+                        src={'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg'}
+                        alt={'Anonymous Chef'}
+                        style={{ width: 40, height: 40, borderRadius: '50%' }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {'Anonymous Chef'}
+                      </Typography>
+                    </>
+                  )}
                 </Box>
               </CardContent>
             </Card>

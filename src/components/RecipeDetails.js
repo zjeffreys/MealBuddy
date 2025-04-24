@@ -19,14 +19,14 @@ const RecipeDetails = () => {
 
   React.useEffect(() => {
     const fetchMeal = async () => {
-      const { data, error } = await supabase
+      const { data: mealData, error: mealError } = await supabase
         .from('meals')
-        .select('*')
+        .select('*, chef:chefs(id, name, profile_image)')
         .eq('id', id)
         .single();
 
-      if (!error) {
-        setMeal(data);
+      if (!mealError) {
+        setMeal(mealData);
       }
     };
 
@@ -55,6 +55,31 @@ const RecipeDetails = () => {
           <Typography variant="body1" color="text.secondary" paragraph>
             Total Time: {meal.prep_time + meal.cook_time} minutes
           </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+            {meal.chef ? (
+              <>
+                <img
+                  src={meal.chef.profile_image || 'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg'}
+                  alt={meal.chef.name || 'Anonymous Chef'}
+                  style={{ width: 40, height: 40, borderRadius: '50%' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {meal.chef.name || 'Anonymous Chef'}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <img
+                  src={'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg'}
+                  alt={'Anonymous Chef'}
+                  style={{ width: 40, height: 40, borderRadius: '50%' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {'Anonymous Chef'}
+                </Typography>
+              </>
+            )}
+          </Box>
           <Typography variant="h6" gutterBottom>
             Ingredients
           </Typography>
