@@ -14,6 +14,7 @@ import AddMealForm from './components/AddMealForm';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RecipeDetails from './components/RecipeDetails';
+import Dashboard from './components/Dashboard';
 
 const theme = createTheme({
   palette: {
@@ -157,6 +158,7 @@ function App() {
                 } />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/dashboard" element={<Dashboard />} />
               </Routes>
             </Container>
             {error && (

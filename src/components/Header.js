@@ -72,6 +72,7 @@ export default function Header() {
         </Box>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {renderNavButton('/recipes', 'Recipes')}
+          {renderNavButton('/dashboard', 'Dashboard')}
           {user && (
             <Button
               variant="contained"
