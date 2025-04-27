@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import './MealPlanner.css';
+import MealCard from './MealCard';
 
 const MealPlanner = () => {
   const [mealData, setMealData] = useState([]);
@@ -91,20 +92,15 @@ const MealPlanner = () => {
         <p>Total Calories: {currentDay.totalCalories} kcal</p>
         <div className="meals">
           {currentDay.meals.map((meal, idx) => (
-            <div key={idx} className={`meal ${meal.type.toLowerCase()}`}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p>{meal.type}</p>
-                  <p>{meal.name}</p>
-                  <p>{meal.calories} kcal</p>
-                </div>
-                <img
-                  src={mealData[idx % mealData.length]?.image || 'default-image.jpg'}
-                  alt={meal.name}
-                  style={{ width: '80px', height: '80px', borderRadius: '4px', marginLeft: '10px', objectFit: 'cover' }}
-                />
-              </div>
-            </div>
+            <MealCard key={idx} meal={{
+              name: meal.name,
+              image: mealData[idx % mealData.length]?.image || 'default-image.jpg',
+              description: `${meal.type} - ${meal.calories} kcal`,
+              dietaryInfo: { calories: meal.calories },
+              prepTime: 0,
+              cookTime: 0,
+              tags: [],
+            }} />
           ))}
         </div>
       </div>
@@ -116,20 +112,15 @@ const MealPlanner = () => {
             <p>Total Calories: {day.totalCalories} kcal</p>
             <div className="meals">
               {day.meals.map((meal, idx) => (
-                <div key={idx} className={`meal ${meal.type.toLowerCase()}`}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <p>{meal.type}</p>
-                      <p>{meal.name}</p>
-                      <p>{meal.calories} kcal</p>
-                    </div>
-                    <img
-                      src={mealData[idx % mealData.length]?.image || 'default-image.jpg'}
-                      alt={meal.name}
-                      style={{ width: '50px', height: '50px', borderRadius: '4px', marginLeft: '10px', objectFit: 'cover' }}
-                    />
-                  </div>
-                </div>
+                <MealCard key={idx} meal={{
+                  name: meal.name,
+                  image: mealData[idx % mealData.length]?.image || 'default-image.jpg',
+                  description: `${meal.type} - ${meal.calories} kcal`,
+                  dietaryInfo: { calories: meal.calories },
+                  prepTime: 0,
+                  cookTime: 0,
+                  tags: [],
+                }} />
               ))}
             </div>
           </div>
