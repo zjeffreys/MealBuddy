@@ -4,27 +4,36 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .current-day {
   flex: 1 1 100%;
   border: 2px solid #64b5f6;
   border-radius: 8px;
-  padding: 20px;
+  padding: 20px 15px;
   margin-bottom: 30px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
-  background-color: transparent; /* Removed background color */
+  background-color: transparent;
+  overflow: hidden; /* Prevent content from spilling out */
+  width: 100%; /* Ensure full width */
+  max-width: 100%; /* Prevent expansion beyond container */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .current-day h3 {
   font-size: 1.5rem;
   margin-bottom: 10px;
+  word-break: break-word; /* Handle long day names */
 }
 
 .current-day p {
   font-size: 1rem;
   margin: 5px 0;
+  word-break: break-word; /* Handle long text */
 }
 
 .current-day .meals {
@@ -33,13 +42,57 @@
   display: flex;
   flex-wrap: nowrap;
   gap: 16px;
-  padding: 16px;
+  padding: 16px 8px;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; /* For Firefox */
 }
 
 .current-day .meals > * {
   flex: 0 0 auto;
-  width: 300px; /* Ensures all cards are the same size */
+  width: calc(100% - 32px); /* Full width minus gap on mobile */
+  max-width: 280px; /* Maximum width on larger screens */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .current-day {
+    padding: 15px 10px;
+  }
+  
+  .current-day h3 {
+    font-size: 1.3rem;
+  }
+  
+  .current-day .meals-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Further adjustments for mobile screens */
+@media (max-width: 480px) {
+  .meal-planner {
+    padding: 15px 10px;
+  }
+  
+  .current-day {
+    padding: 12px 8px;
+    margin-bottom: 20px;
+  }
+  
+  .current-day h3 {
+    font-size: 1.2rem;
+  }
+  
+  .current-day p {
+    font-size: 0.9rem;
+  }
+  
+  .current-day .meals > * {
+    width: calc(100% - 16px);
+    max-width: 220px;
+  }
 }
 
 .current-day .meals::-webkit-scrollbar {
@@ -56,7 +109,7 @@
 }
 
 .current-day .meal {
-  background-color: rgba(255, 204, 128, 0.2); /* Lighter shade for breakfast */
+  background-color: rgba(255, 204, 128, 0.2);
   padding: 10px;
   border-radius: 8px;
   width: 200px;
@@ -65,15 +118,15 @@
 }
 
 .current-day .meal.lunch {
-  background-color: rgba(129, 199, 132, 0.2); /* Lighter shade for lunch */
+  background-color: rgba(129, 199, 132, 0.2);
 }
 
 .current-day .meal.dinner {
-  background-color: rgba(100, 181, 246, 0.2); /* Lighter shade for dinner */
+  background-color: rgba(100, 181, 246, 0.2);
 }
 
 .current-day .meal.snacks {
-  background-color: rgba(186, 104, 200, 0.2); /* Lighter shade for snacks */
+  background-color: rgba(186, 104, 200, 0.2);
 }
 
 .current-day .meal img {
@@ -89,10 +142,39 @@
   font-size: 0.9rem;
 }
 
+/* Days container for displaying the week */
+.days-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent horizontal overflow */
+}
+
+@media (max-width: 768px) {
+  .days-container {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .days-container {
+    gap: 15px;
+  }
+}
+
 .planner-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
+}
+
+@media (max-width: 480px) {
+  .planner-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 .planner-day {
@@ -123,11 +205,28 @@
   padding: 16px;
   scroll-behavior: smooth;
   white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 
 .meals > * {
   flex: 0 0 auto;
-  width: 300px; /* Ensures all cards are the same size */
+  width: 300px;
+}
+
+@media (max-width: 768px) {
+  .meals > * {
+    width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .meals > * {
+    width: 200px;
+  }
+  
+  .meals {
+    padding: 16px 8px;
+  }
 }
 
 .meals::-webkit-scrollbar {
@@ -154,19 +253,19 @@
 }
 
 .meal.breakfast {
-  background-color: #ffcc80; /* Light orange for breakfast */
+  background-color: #ffcc80;
 }
 
 .meal.lunch {
-  background-color: #81c784; /* Light green for lunch */
+  background-color: #81c784;
 }
 
 .meal.dinner {
-  background-color: #64b5f6; /* Light blue for dinner */
+  background-color: #64b5f6;
 }
 
 .meal.snacks {
-  background-color: #ba68c8; /* Light purple for snacks */
+  background-color: #ba68c8;
 }
 
 .meal p {
@@ -180,10 +279,22 @@
   object-fit: cover;
 }
 
-/* Reorder the CSS to ensure proper alignment and structure */
+@media (max-width: 480px) {
+  .meal img {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .meal {
+    font-size: 0.8rem;
+  }
+}
+
+/* Diet plans section */
 .diet-plans {
   position: relative;
   margin-bottom: 20px;
+  padding-top: 40px; /* Added padding to make room for the button */
 }
 
 .diet-plans h3 {
@@ -191,11 +302,17 @@
   margin-bottom: 10px;
 }
 
+@media (max-width: 768px) {
+  .diet-plans h3 {
+    font-size: 1.3rem;
+  }
+}
+
 .diet-plans .edit-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: #4caf50; /* Match theme color */
+  top: 0; /* Changed from 10px to 0 */
+  right: 0;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -203,17 +320,30 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.3s;
-  z-index: 10; /* Ensure it stays above other elements */
+  z-index: 10;
 }
 
 .diet-plans .edit-button:hover {
-  background-color: #45a049; /* Darker green on hover */
+  background-color: #45a049;
 }
 
 .diet-plan-cards {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .diet-plan-cards {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .diet-plan-cards {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .diet-plan-card {
@@ -225,6 +355,13 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@media (max-width: 480px) {
+  .diet-plan-card {
+    width: 100%;
+    max-width: 300px;
+  }
 }
 
 .diet-plan-card:hover {
@@ -244,23 +381,23 @@
 }
 
 .diet-plan-icon {
-  font-size: 2rem; /* Increase icon size */
+  font-size: 2rem;
   margin-bottom: 10px;
 }
 
 .diet-plan-card:nth-child(1) .diet-plan-icon {
-  color: #ff5722; /* Orange for Keto */
+  color: #ff5722;
 }
 
 .diet-plan-card:nth-child(2) .diet-plan-icon {
-  color: #4caf50; /* Green for Weight Loss */
+  color: #4caf50;
 }
 
 .diet-plan-card:nth-child(3) .diet-plan-icon {
-  color: #2196f3; /* Blue for Vegan */
+  color: #2196f3;
 }
 
-/* Styles for the modal overlay */
+/* Modal styles */
 .overlay {
   position: fixed;
   top: 0;
@@ -274,7 +411,6 @@
   z-index: 1000;
 }
 
-/* Add overlay styles for the modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -285,7 +421,6 @@
   z-index: 1000;
 }
 
-/* Ensure the modal is perfectly centered and properly sized */
 .modal {
   position: fixed;
   top: 50%;
@@ -295,16 +430,38 @@
   padding: 20px;
   border-radius: 8px;
   max-width: 500px;
-  width: 90%; /* Adjust for smaller screens */
-  height: 70vh; /* Consistent height */
-  overflow: hidden; /* Prevent content overflow */
+  width: 90%;
+  max-height: 80vh;
+  height: auto;
+  overflow-y: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 1001;
   display: flex;
   flex-direction: column;
+  margin: 0; /* Ensure no margins interfere with centering */
 }
 
-/* Updated styles for the search input */
+@media (max-width: 768px) {
+  .modal {
+    width: 85%;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    width: 90%;
+    padding: 15px 12px;
+    max-height: 85vh;
+  }
+  
+  .modal h2 {
+    font-size: 1.3rem;
+    margin-top: 10px;
+    padding-right: 30px; /* Make room for close icon */
+  }
+}
+
 .modal input[type="text"] {
   width: 100%;
   padding: 12px;
@@ -321,7 +478,6 @@
   box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
 }
 
-/* Style for the close icon */
 .modal .close-icon {
   position: absolute;
   top: 10px;
@@ -336,14 +492,13 @@
   color: #4caf50;
 }
 
-/* Adjust the available plans section to scroll properly */
 .available-plans {
-  flex: 1; /* Take up remaining space */
-  overflow-y: auto; /* Enable vertical scrolling */
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-right: 10px; /* Add padding for scrollbar */
+  padding-right: 10px;
 }
 
 .available-plans::-webkit-scrollbar {
@@ -359,7 +514,6 @@
   background-color: #aaa;
 }
 
-/* Updated styles for modal rows */
 .available-plans .diet-plan-row {
   display: flex;
   align-items: center;
@@ -403,7 +557,7 @@
   background-color: #45a049;
 }
 
-/* Adjusted styles for subscription buttons */
+/* Subscription button styles */
 .subscription-button {
   font-size: 0.9rem;
   padding: 8px 12px;
@@ -414,28 +568,35 @@
 }
 
 .subscription-button.unsubscribed {
-  background-color: #f0f0f0; /* Light grey for unsubscribed */
-  color: #333; /* Dark text for unsubscribed */
+  background-color: #f0f0f0;
+  color: #333;
 }
 
 .subscription-button.subscribed {
-  background-color: #4caf50; /* Green for subscribed */
-  color: white; /* White text for subscribed */
+  background-color: #4caf50;
+  color: white;
+}
+
+@media (max-width: 480px) {
+  .subscription-button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
 }
 
 .subscription-button .subscribe-icon {
-  font-size: 1.8rem; /* Increased size */
-  color: grey; /* Grey color for not subscribed */
+  font-size: 1.8rem;
+  color: grey;
   transition: color 0.3s;
 }
 
 .subscription-button .subscribed-icon {
-  font-size: 1.8rem; /* Increased size */
-  color: #4caf50; /* Green color for subscribed */
+  font-size: 1.8rem;
+  color: #4caf50;
   transition: color 0.3s;
 }
 
-/* Add styles for the new button and modal */
+/* Grocery list button */
 .generate-grocery-list-button {
   display: block;
   margin: 20px auto;
@@ -453,7 +614,14 @@
   background-color: #45a049;
 }
 
-/* Modal styles for date range selection */
+@media (max-width: 480px) {
+  .generate-grocery-list-button {
+    width: 100%;
+    padding: 12px 15px;
+  }
+}
+
+/* Grocery list modal */
 .grocery-list-modal {
   position: fixed;
   top: 50%;
@@ -474,6 +642,7 @@
 .grocery-list-modal h3 {
   font-size: 1.5rem;
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .grocery-list-modal input[type="date"] {
@@ -495,13 +664,32 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
+  width: 100%;
 }
 
 .grocery-list-modal button:hover {
   background-color: #45a049;
 }
 
-/* Styles for action buttons */
+@media (max-width: 480px) {
+  .grocery-list-modal {
+    padding: 15px;
+  }
+  
+  .grocery-list-modal h3 {
+    font-size: 1.3rem;
+  }
+  
+  .grocery-list-modal input[type="date"] {
+    font-size: 0.9rem;
+  }
+  
+  .grocery-list-modal button {
+    font-size: 0.9rem;
+  }
+}
+
+/* Action buttons */
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -521,6 +709,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 480px) {
+  .action-buttons button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .action-buttons button svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .action-buttons button:hover {
   background-color: #ffffff;
   transform: translateY(-2px);
@@ -538,4 +738,14 @@
 .action-buttons button svg {
   width: 18px;
   height: 18px;
+}
+
+/* Loading state */
+.meal-planner.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.2rem;
+  color: #666;
 }

@@ -1,26 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, createRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { format, addDays } from 'date-fns';
 import './MealPlanner.css';
 import MealCard from './MealCard';
-import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSyncAlt, FaSave } from 'react-icons/fa';
+import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSyncAlt, FaSave, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import Modal from 'react-modal';
 import { getImageUrl } from '../services/mealService';
 
 // Set the app element for accessibility
 Modal.setAppElement('#root');
-
-// Add custom styles for the modal
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-  },
-};
 
 const MealPlanner = () => {
   const [meals, setMeals] = useState([]);
@@ -45,6 +33,9 @@ const MealPlanner = () => {
   const [groceryModalOpen, setGroceryModalOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const currentDayMealsRef = useRef(null);
+  const [mealRefs, setMealRefs] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -78,6 +69,36 @@ const MealPlanner = () => {
   const filteredPlans = availablePlans.filter((plan) =>
     plan.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Create refs for each day when mealPlan changes
+  useEffect(() => {
+    if (mealPlan.length > 0) {
+      setMealRefs(mealPlan.map(() => createRef()));
+    }
+  }, [mealPlan]);
+
+  // Add window resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Scroll functions for meal containers
+  const scrollMeals = (direction, containerRef) => {
+    if (!containerRef || !containerRef.current) return;
+    
+    const scrollAmount = isMobile ? 200 : 300;
+    const currentPosition = containerRef.current.scrollLeft;
+    
+    containerRef.current.scrollTo({
+      left: direction === 'left' ? currentPosition - scrollAmount : currentPosition + scrollAmount,
+      behavior: 'smooth'
+    });
+  };
 
   // Fetch meal data from Supabase
   useEffect(() => {
@@ -306,6 +327,106 @@ const MealPlanner = () => {
     alert('Meal plan saved successfully!');
   };
 
+  // Method to render a mobile-friendly day
+  const renderDayMeals = (day, dayIndex) => {
+    // Determine which ref to use
+    const ref = dayIndex === 'current' ? currentDayMealsRef : mealRefs[dayIndex];
+    
+    return (
+      <div key={dayIndex} className="current-day">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>{day.day}</h3>
+          <div className="action-buttons">
+            <button onClick={() => handleRegenerateMeals(dayIndex)} title="Regenerate Meals">
+              <FaSyncAlt />
+            </button>
+            <button onClick={() => handleSaveMeals(dayIndex)} title="Save Meals">
+              <FaSave />
+            </button>
+          </div>
+        </div>
+        <p>{day.date}</p>
+        <p>Total Calories: {day.totalCalories} kcal</p>
+        
+        <div className="meals-container" style={{ position: 'relative' }}>
+          {/* Only show navigation arrows if not on a small mobile device */}
+          {!isMobile && (
+            <>
+              <button 
+                className="scroll-button left" 
+                onClick={() => scrollMeals('left', ref)}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 2,
+                  background: 'rgba(255,255,255,0.8)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              >
+                <FaArrowLeft />
+              </button>
+              <button 
+                className="scroll-button right" 
+                onClick={() => scrollMeals('right', ref)}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 2,
+                  background: 'rgba(255,255,255,0.8)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              >
+                <FaArrowRight />
+              </button>
+            </>
+          )}
+          
+          <div 
+            className="meals" 
+            ref={ref}
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              maxWidth: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            {day.meals.map((meal, idx) => (
+              <MealCard key={idx} meal={{
+                name: meal.name,
+                image: meal.image,
+                description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
+                dietaryInfo: meal.dietaryInfo,
+                prepTime: meal.prepTime,
+                cookTime: meal.cookTime,
+                tags: meal.tags,
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (mealsLoading) {
     return <div className="meal-planner loading">Loading meal data...</div>;
   }
@@ -317,13 +438,14 @@ const MealPlanner = () => {
       <button
         className="generate-grocery-list-button"
         onClick={handleGenerateClick}
+        aria-label="Generate Smart Grocery List"
       >
         Generate Smart Grocery List
       </button>
 
       {/* Display subscribed diet plans with icons */}
       <div className="diet-plans">
-        <button className="edit-button" onClick={toggleModal}>
+        <button className="edit-button" onClick={toggleModal} aria-label="Manage Subscriptions">
           Manage Subscriptions
         </button>
         <h3>Subscribed Diet Plans</h3>
@@ -344,9 +466,9 @@ const MealPlanner = () => {
         contentLabel="Manage Diet Plans"
         className="modal"
         overlayClassName="overlay"
-        style={customStyles}
+        ariaHideApp={false} // Fix for screen readers
       >
-        <FaTimes className="close-icon" onClick={toggleModal} />
+        <FaTimes className="close-icon" onClick={toggleModal} aria-label="Close dialog" />
         <h2>Manage Diet Plans</h2>
 
         {/* Display subscribed plans at the top */}
@@ -360,6 +482,7 @@ const MealPlanner = () => {
                 <button
                   onClick={() => handleToggleSubscription(plan)}
                   className="subscription-button subscribed"
+                  aria-label={`Unsubscribe from ${plan.name}`}
                 >
                   Subscribed
                 </button>
@@ -377,6 +500,7 @@ const MealPlanner = () => {
             placeholder="Search for diet plans..."
             value={searchQuery}
             onChange={handleSearch}
+            aria-label="Search for diet plans"
           />
           <div className="available-plans">
             {filteredPlans
@@ -388,6 +512,7 @@ const MealPlanner = () => {
                   <button
                     onClick={() => handleToggleSubscription(plan)}
                     className="subscription-button unsubscribed"
+                    aria-label={`Subscribe to ${plan.name}`}
                   >
                     Subscribe
                   </button>
@@ -398,69 +523,11 @@ const MealPlanner = () => {
       </Modal>
 
       {/* Display current day */}
-      {currentDayMeals && (
-        <div className="current-day">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>{currentDayMeals.day}</h3>
-            <div className="action-buttons">
-              <button onClick={() => handleRegenerateMeals('current')} title="Regenerate Meals">
-                <FaSyncAlt />
-              </button>
-              <button onClick={() => handleSaveMeals('current')} title="Save Meals">
-                <FaSave />
-              </button>
-            </div>
-          </div>
-          <p>{currentDayMeals.date}</p>
-          <p>Total Calories: {currentDayMeals.totalCalories} kcal</p>
-          <div className="meals">
-            {currentDayMeals.meals.map((meal, idx) => (
-              <MealCard key={idx} meal={{
-                name: meal.name,
-                image: meal.image,
-                description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
-                dietaryInfo: meal.dietaryInfo,
-                prepTime: meal.prepTime,
-                cookTime: meal.cookTime,
-                tags: meal.tags,
-              }} />
-            ))}
-          </div>
-        </div>
-      )}
+      {currentDayMeals && renderDayMeals(currentDayMeals, 'current')}
 
       {/* Display week meal plan */}
       <div className="days-container">
-        {mealPlan.map((day, index) => (
-          <div key={index} className="current-day">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>{day.day}</h3>
-              <div className="action-buttons">
-                <button onClick={() => handleRegenerateMeals(index)} title="Regenerate Meals">
-                  <FaSyncAlt />
-                </button>
-                <button onClick={() => handleSaveMeals(index)} title="Save Meals">
-                  <FaSave />
-                </button>
-              </div>
-            </div>
-            <p>{day.date}</p>
-            <p>Total Calories: {day.totalCalories} kcal</p>
-            <div className="meals">
-              {day.meals.map((meal, idx) => (
-                <MealCard key={idx} meal={{
-                  name: meal.name,
-                  image: meal.image,
-                  description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
-                  dietaryInfo: meal.dietaryInfo,
-                  prepTime: meal.prepTime,
-                  cookTime: meal.cookTime,
-                  tags: meal.tags,
-                }} />
-              ))}
-            </div>
-          </div>
-        ))}
+        {mealPlan.map((day, index) => renderDayMeals(day, index))}
       </div>
 
       {/* Grocery list modal */}
@@ -473,11 +540,13 @@ const MealPlanner = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              aria-label="Start date"
             />
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              aria-label="End date"
             />
             <button onClick={handleDateSubmit}>Generate</button>
             <button onClick={handleGroceryModalClose}>Cancel</button>
