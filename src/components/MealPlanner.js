@@ -3,7 +3,23 @@ import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import './MealPlanner.css';
 import MealCard from './MealCard';
-import { FaLeaf, FaWeight, FaBacon } from 'react-icons/fa';
+import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle } from 'react-icons/fa';
+import Modal from 'react-modal';
+
+// Set the app element for accessibility
+Modal.setAppElement('#root');
+
+// Add custom styles for the modal
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+  },
+};
 
 const MealPlanner = () => {
   const [mealData, setMealData] = useState([]);
@@ -12,22 +28,40 @@ const MealPlanner = () => {
     { name: 'Weight Loss', icon: <FaWeight /> },
     { name: 'Vegan', icon: <FaLeaf /> },
   ]); // Example diet plans with icons
-  const [isEditing, setIsEditing] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [availablePlans] = useState([
+    { name: 'Keto', icon: <FaBacon /> },
+    { name: 'Weight Loss', icon: <FaWeight /> },
+    { name: 'Vegan', icon: <FaLeaf /> },
+    { name: 'Paleo', icon: <FaLeaf /> },
+    { name: 'Mediterranean', icon: <FaLeaf /> },
+  ]);
+  const [showAllPlans, setShowAllPlans] = useState(false);
 
-  const toggleEdit = () => {
-    setIsEditing(!isEditing);
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
   };
 
-  const handleAddPlan = () => {
-    const newPlan = prompt('Enter the name of the new diet plan:');
-    if (newPlan) {
-      setDietPlans([...dietPlans, { name: newPlan, icon: <FaLeaf /> }]);
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleToggleSubscription = (plan) => {
+    if (dietPlans.some((p) => p.name === plan.name)) {
+      setDietPlans(dietPlans.filter((p) => p.name !== plan.name));
+    } else {
+      setDietPlans([...dietPlans, plan]);
     }
   };
 
   const handleRemovePlan = (index) => {
     const updatedPlans = dietPlans.filter((_, i) => i !== index);
     setDietPlans(updatedPlans);
+  };
+
+  const toggleShowAllPlans = () => {
+    setShowAllPlans(!showAllPlans);
   };
 
   useEffect(() => {
@@ -48,6 +82,10 @@ const MealPlanner = () => {
 
     fetchRandomMeals();
   }, []);
+
+  const filteredPlans = availablePlans.filter((plan) =>
+    plan.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const currentDay = {
     day: format(new Date(), 'EEEE'),
@@ -112,8 +150,8 @@ const MealPlanner = () => {
 
       {/* Display subscribed diet plans with icons */}
       <div className="diet-plans">
-        <button className="edit-button" onClick={toggleEdit}>
-          {isEditing ? 'Done Editing' : 'Edit Subscriptions'}
+        <button className="edit-button" onClick={toggleModal}>
+          Manage Subscriptions
         </button>
         <h3>Subscribed Diet Plans</h3>
         <div className="diet-plan-cards">
@@ -122,16 +160,69 @@ const MealPlanner = () => {
               <div className="diet-plan-icon">{plan.icon}</div>
               <h4>{plan.name}</h4>
               <p>Explore meals tailored to your {plan.name} plan!</p>
-              {isEditing && (
-                <button onClick={() => handleRemovePlan(index)}>Remove</button>
-              )}
             </div>
           ))}
         </div>
-        {isEditing && (
-          <button onClick={handleAddPlan}>Add New Plan</button>
-        )}
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={toggleModal}
+        contentLabel="Manage Diet Plans"
+        className="modal"
+        overlayClassName="overlay"
+        style={customStyles} // Apply custom styles
+      >
+        <FaTimes className="close-icon" onClick={toggleModal} />
+        <h2>Manage Diet Plans</h2>
+
+        {/* Display subscribed plans at the top */}
+        <div className="subscribed-plans">
+          <h3>Subscribed Plans</h3>
+          <div className="available-plans">
+            {dietPlans.map((plan, index) => (
+              <div key={index} className="diet-plan-row">
+                <div className="diet-plan-icon">{plan.icon}</div>
+                <h4>{plan.name}</h4>
+                <button
+                  onClick={() => handleToggleSubscription(plan)}
+                  className="subscription-button subscribed"
+                >
+                  Subscribed
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Search and discover more plans */}
+        <div className="discover-plans">
+          <h3>Discover More Plans</h3>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search for diet plans..."
+            value={searchQuery}
+            onChange={handleSearch}
+          />
+          <div className="available-plans">
+            {filteredPlans
+              .filter((plan) => !dietPlans.some((p) => p.name === plan.name)) // Exclude subscribed plans
+              .map((plan, index) => (
+                <div key={index} className="diet-plan-row">
+                  <div className="diet-plan-icon">{plan.icon}</div>
+                  <h4>{plan.name}</h4>
+                  <button
+                    onClick={() => handleToggleSubscription(plan)}
+                    className="subscription-button unsubscribed"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
+      </Modal>
 
       <div className="current-day">
         <h3>{currentDay.day}</h3>

@@ -259,3 +259,167 @@
 .diet-plan-card:nth-child(3) .diet-plan-icon {
   color: #2196f3; /* Blue for Vegan */
 }
+
+/* Styles for the modal overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Ensure the modal is perfectly centered and properly sized */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%; /* Adjust for smaller screens */
+  height: 70vh; /* Consistent height */
+  overflow: hidden; /* Prevent content overflow */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Updated styles for the search input */
+.modal input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal input[type="text"]:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+/* Style for the close icon */
+.modal .close-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5rem;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.modal .close-icon:hover {
+  color: #4caf50;
+}
+
+/* Adjust the available plans section to scroll properly */
+.available-plans {
+  flex: 1; /* Take up remaining space */
+  overflow-y: auto; /* Enable vertical scrolling */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 10px; /* Add padding for scrollbar */
+}
+
+.available-plans::-webkit-scrollbar {
+  width: 8px;
+}
+
+.available-plans::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.available-plans::-webkit-scrollbar-thumb:hover {
+  background-color: #aaa;
+}
+
+/* Updated styles for modal rows */
+.available-plans .diet-plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.available-plans .diet-plan-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.available-plans .diet-plan-row h4 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #333;
+}
+
+.available-plans .diet-plan-row .diet-plan-icon {
+  font-size: 1.5rem;
+  margin-right: 10px;
+}
+
+.available-plans .diet-plan-row button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.available-plans .diet-plan-row button:hover {
+  background-color: #45a049;
+}
+
+/* Adjusted styles for subscription buttons */
+.subscription-button {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.subscription-button.unsubscribed {
+  background-color: #f0f0f0; /* Light grey for unsubscribed */
+  color: #333; /* Dark text for unsubscribed */
+}
+
+.subscription-button.subscribed {
+  background-color: #4caf50; /* Green for subscribed */
+  color: white; /* White text for subscribed */
+}
+
+.subscription-button .subscribe-icon {
+  font-size: 1.8rem; /* Increased size */
+  color: grey; /* Grey color for not subscribed */
+  transition: color 0.3s;
+}
+
+.subscription-button .subscribed-icon {
+  font-size: 1.8rem; /* Increased size */
+  color: #4caf50; /* Green color for subscribed */
+  transition: color 0.3s;
+}
