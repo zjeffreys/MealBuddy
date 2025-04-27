@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import './MealPlanner.css';
 import MealCard from './MealCard';
 import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSyncAlt, FaSave } from 'react-icons/fa';
 import Modal from 'react-modal';
+import { getImageUrl } from '../services/mealService';
 
 // Set the app element for accessibility
 Modal.setAppElement('#root');
@@ -22,12 +23,16 @@ const customStyles = {
 };
 
 const MealPlanner = () => {
-  const [mealData, setMealData] = useState([]);
+  const [meals, setMeals] = useState([]);
+  const [mealsLoading, setMealsLoading] = useState(true);
+  const [mealPlan, setMealPlan] = useState([]);
+  const [currentDayMeals, setCurrentDayMeals] = useState(null);
+  
   const [dietPlans, setDietPlans] = useState([
     { name: 'Keto', icon: <FaBacon /> },
     { name: 'Weight Loss', icon: <FaWeight /> },
     { name: 'Vegan', icon: <FaLeaf /> },
-  ]); // Example diet plans with icons
+  ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [availablePlans] = useState([
@@ -37,7 +42,6 @@ const MealPlanner = () => {
     { name: 'Paleo', icon: <FaLeaf /> },
     { name: 'Mediterranean', icon: <FaLeaf /> },
   ]);
-  const [showAllPlans, setShowAllPlans] = useState(false);
   const [groceryModalOpen, setGroceryModalOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -58,15 +62,6 @@ const MealPlanner = () => {
     }
   };
 
-  const handleRemovePlan = (index) => {
-    const updatedPlans = dietPlans.filter((_, i) => i !== index);
-    setDietPlans(updatedPlans);
-  };
-
-  const toggleShowAllPlans = () => {
-    setShowAllPlans(!showAllPlans);
-  };
-
   const handleGenerateClick = () => {
     setGroceryModalOpen(true);
   };
@@ -80,95 +75,240 @@ const MealPlanner = () => {
     setGroceryModalOpen(false);
   };
 
-  const handleRegenerateMeals = (dayIndex) => {
-    console.log(`Regenerating meals for day index: ${dayIndex}`);
-    // Logic to regenerate meals for the specific day
-  };
-
-  const handleSaveMeals = (dayIndex) => {
-    console.log(`Saving meals for day index: ${dayIndex}`);
-    // Logic to save meals for the specific day
-  };
-
-  useEffect(() => {
-    const fetchRandomMeals = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('meals')
-          .select('*')
-          .limit(10);
-
-        if (error) throw error;
-
-        setMealData(data);
-      } catch (err) {
-        console.error('Error fetching meals:', err);
-      }
-    };
-
-    fetchRandomMeals();
-  }, []);
-
   const filteredPlans = availablePlans.filter((plan) =>
     plan.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const currentDay = {
-    day: format(new Date(), 'EEEE'),
-    date: format(new Date(), 'EEE, MMM d'),
-    totalCalories: 1500,
-    meals: [
-      { type: 'Breakfast', name: 'Bagel with Cream Cheese', calories: 400 },
-      { type: 'Lunch', name: 'Chicken Caesar Wrap', calories: 450 },
-      { type: 'Dinner', name: 'Grilled Shrimp Tacos', calories: 500 },
-      { type: 'Snacks', name: 'Protein Bar', calories: 150 },
-    ],
+  // Fetch meal data from Supabase
+  useEffect(() => {
+    const fetchMeals = async () => {
+      try {
+        setMealsLoading(true);
+        
+        // Fetch meals with chef data from the database
+        const { data: mealsData, error: mealsError } = await supabase
+          .from('meals')
+          .select('*, chef:chefs(id, name, profile_image)');
+
+        if (mealsError) throw mealsError;
+
+        // Fetch dietary tags from the database
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('dietary_tags')
+          .select('*');
+
+        if (tagsError) throw tagsError;
+
+        // Fetch meal categories from the database
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('meal_categories')
+          .select('*');
+
+        if (categoriesError) throw categoriesError;
+
+        // Map tag IDs to tag names and category IDs to category names
+        const processedMeals = mealsData.map(meal => {
+          const mappedTags = (meal.tags || []).map(tagId => {
+            const tag = tagsData.find(tag => tag.id === tagId);
+            if (!tag) return `Unknown Tag`;
+            return tag.name;
+          });
+
+          const mappedCategories = (meal.category || []).map(categoryId => {
+            const category = categoriesData.find(cat => cat.id === categoryId);
+            if (!category) return `Unknown Category`;
+            return category.name;
+          });
+
+          return {
+            ...meal,
+            image: meal.image,
+            tags: mappedTags,
+            category: mappedCategories,
+            totalTime: (meal.prep_time || 0) + (meal.cook_time || 0),
+            prepTime: meal.prep_time || 0,
+            cookTime: meal.cook_time || 0,
+            dietaryInfo: {
+              calories: meal.dietary_info?.calories || Math.floor(Math.random() * 300) + 200,
+            }
+          };
+        });
+
+        setMeals(processedMeals);
+        
+        // Generate meal plan
+        generateMealPlan(processedMeals);
+      } catch (err) {
+        console.error('Error fetching meals:', err);
+      } finally {
+        setMealsLoading(false);
+      }
+    };
+
+    fetchMeals();
+  }, []);
+
+  // Generate a random meal plan using the fetched meals
+  const generateMealPlan = (availableMeals) => {
+    if (!availableMeals.length) return;
+
+    // Function to randomly select meals for a type
+    const selectMealsForType = (type, count = 1) => {
+      // Filter meals that might match this type based on category or name
+      const mealsForType = availableMeals.filter(meal => {
+        const lowerType = type.toLowerCase();
+        const hasMatchingCategory = meal.category.some(cat => 
+          cat.toLowerCase().includes(lowerType)
+        );
+        const nameContainsType = meal.name.toLowerCase().includes(lowerType);
+        return hasMatchingCategory || nameContainsType;
+      });
+
+      // If we don't have enough type-specific meals, use any meals
+      const mealPool = mealsForType.length >= count ? mealsForType : availableMeals;
+      
+      // Shuffle and pick meals
+      return [...mealPool]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, count)
+        .map(meal => ({
+          ...meal,
+          type, // Add the meal type
+        }));
+    };
+
+    // Get today's date
+    const today = new Date();
+    
+    // Create meals for today
+    const todayMeals = [
+      ...selectMealsForType('Breakfast', 1),
+      ...selectMealsForType('Lunch', 1),
+      ...selectMealsForType('Dinner', 1),
+      ...selectMealsForType('Snack', 1)
+    ];
+    
+    // Calculate total calories
+    const todayTotalCalories = todayMeals.reduce(
+      (sum, meal) => sum + (meal.dietaryInfo?.calories || 0), 
+      0
+    );
+
+    setCurrentDayMeals({
+      day: format(today, 'EEEE'),
+      date: format(today, 'EEE, MMM d'),
+      totalCalories: todayTotalCalories,
+      meals: todayMeals
+    });
+
+    // Create week meal plan
+    const weekMealPlan = [];
+    for (let i = 1; i <= 7; i++) {
+      const date = addDays(today, i);
+      const dayMeals = [
+        ...selectMealsForType('Breakfast', 1),
+        ...selectMealsForType('Lunch', 1),
+        ...selectMealsForType('Dinner', 1),
+        ...selectMealsForType('Snack', 1)
+      ];
+      
+      const totalCalories = dayMeals.reduce(
+        (sum, meal) => sum + (meal.dietaryInfo?.calories || 0), 
+        0
+      );
+
+      weekMealPlan.push({
+        day: format(date, 'EEEE'),
+        date: format(date, 'EEE, MMM d'),
+        totalCalories,
+        meals: dayMeals
+      });
+    }
+
+    setMealPlan(weekMealPlan);
   };
 
-  const days = [
-    { day: 'Monday', date: 'Mon, Apr 21', totalCalories: 1530, meals: [
-      { type: 'Breakfast', name: 'Avocado Toast', calories: 350 },
-      { type: 'Lunch', name: 'Quinoa Salad', calories: 420 },
-      { type: 'Dinner', name: 'Grilled Salmon', calories: 580 },
-      { type: 'Snacks', name: 'Greek Yogurt with Berries', calories: 180 },
-    ] },
-    { day: 'Tuesday', date: 'Tue, Apr 22', totalCalories: 1300, meals: [
-      { type: 'Breakfast', name: 'Smoothie Bowl', calories: 320 },
-      { type: 'Lunch', name: 'Chicken Wrap', calories: 450 },
-      { type: 'Dinner', name: 'Vegetable Stir Fry', calories: 380 },
-      { type: 'Snacks', name: 'Hummus with Carrots', calories: 150 },
-    ] },
-    { day: 'Wednesday', date: 'Wed, Apr 23', totalCalories: 1400, meals: [
-      { type: 'Breakfast', name: 'Pancakes', calories: 400 },
-      { type: 'Lunch', name: 'Caesar Salad', calories: 350 },
-      { type: 'Dinner', name: 'Spaghetti Bolognese', calories: 500 },
-      { type: 'Snacks', name: 'Apple Slices with Peanut Butter', calories: 150 },
-    ] },
-    { day: 'Thursday', date: 'Thu, Apr 24', totalCalories: 1350, meals: [
-      { type: 'Breakfast', name: 'Oatmeal with Bananas', calories: 300 },
-      { type: 'Lunch', name: 'Turkey Sandwich', calories: 400 },
-      { type: 'Dinner', name: 'Grilled Chicken with Vegetables', calories: 500 },
-      { type: 'Snacks', name: 'Trail Mix', calories: 150 },
-    ] },
-    { day: 'Friday', date: 'Fri, Apr 25', totalCalories: 1450, meals: [
-      { type: 'Breakfast', name: 'Scrambled Eggs with Toast', calories: 350 },
-      { type: 'Lunch', name: 'Tuna Salad', calories: 400 },
-      { type: 'Dinner', name: 'Beef Stir Fry', calories: 550 },
-      { type: 'Snacks', name: 'Yogurt with Granola', calories: 150 },
-    ] },
-    { day: 'Saturday', date: 'Sat, Apr 26', totalCalories: 1500, meals: [
-      { type: 'Breakfast', name: 'Bagel with Cream Cheese', calories: 400 },
-      { type: 'Lunch', name: 'Chicken Caesar Wrap', calories: 450 },
-      { type: 'Dinner', name: 'Grilled Shrimp Tacos', calories: 500 },
-      { type: 'Snacks', name: 'Protein Bar', calories: 150 },
-    ] },
-    { day: 'Sunday', date: 'Sun, Apr 27', totalCalories: 1400, meals: [
-      { type: 'Breakfast', name: 'French Toast', calories: 400 },
-      { type: 'Lunch', name: 'Vegetable Soup', calories: 350 },
-      { type: 'Dinner', name: 'Roast Chicken with Potatoes', calories: 500 },
-      { type: 'Snacks', name: 'Cheese and Crackers', calories: 150 },
-    ] },
-  ];
+  const handleRegenerateMeals = (dayIndex) => {
+    if (!meals.length) return;
+    
+    // Function to randomly select meals for a type
+    const selectMealsForType = (type, count = 1) => {
+      const mealsForType = meals.filter(meal => {
+        const lowerType = type.toLowerCase();
+        const hasMatchingCategory = meal.category.some(cat => 
+          cat.toLowerCase().includes(lowerType)
+        );
+        const nameContainsType = meal.name.toLowerCase().includes(lowerType);
+        return hasMatchingCategory || nameContainsType;
+      });
+
+      const mealPool = mealsForType.length >= count ? mealsForType : meals;
+      
+      return [...mealPool]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, count)
+        .map(meal => ({
+          ...meal,
+          type,
+        }));
+    };
+
+    // Regenerate for current day
+    if (dayIndex === 'current' && currentDayMeals) {
+      const newMeals = [
+        ...selectMealsForType('Breakfast', 1),
+        ...selectMealsForType('Lunch', 1),
+        ...selectMealsForType('Dinner', 1),
+        ...selectMealsForType('Snack', 1)
+      ];
+      
+      const totalCalories = newMeals.reduce(
+        (sum, meal) => sum + (meal.dietaryInfo?.calories || 0), 
+        0
+      );
+
+      setCurrentDayMeals({
+        ...currentDayMeals,
+        totalCalories,
+        meals: newMeals
+      });
+    } 
+    // Regenerate for a day in the week
+    else if (typeof dayIndex === 'number' && mealPlan[dayIndex]) {
+      const newMeals = [
+        ...selectMealsForType('Breakfast', 1),
+        ...selectMealsForType('Lunch', 1),
+        ...selectMealsForType('Dinner', 1),
+        ...selectMealsForType('Snack', 1)
+      ];
+      
+      const totalCalories = newMeals.reduce(
+        (sum, meal) => sum + (meal.dietaryInfo?.calories || 0), 
+        0
+      );
+
+      const updatedMealPlan = [...mealPlan];
+      updatedMealPlan[dayIndex] = {
+        ...updatedMealPlan[dayIndex],
+        totalCalories,
+        meals: newMeals
+      };
+
+      setMealPlan(updatedMealPlan);
+    }
+  };
+
+  const handleSaveMeals = (dayIndex) => {
+    // In a real app, this would save the meals to a database or user profile
+    console.log(`Meals saved for day: ${dayIndex}`);
+    
+    // Show a temporary save confirmation
+    alert('Meal plan saved successfully!');
+  };
+
+  if (mealsLoading) {
+    return <div className="meal-planner loading">Loading meal data...</div>;
+  }
 
   return (
     <div className="meal-planner">
@@ -204,7 +344,7 @@ const MealPlanner = () => {
         contentLabel="Manage Diet Plans"
         className="modal"
         overlayClassName="overlay"
-        style={customStyles} // Apply custom styles
+        style={customStyles}
       >
         <FaTimes className="close-icon" onClick={toggleModal} />
         <h2>Manage Diet Plans</h2>
@@ -240,7 +380,7 @@ const MealPlanner = () => {
           />
           <div className="available-plans">
             {filteredPlans
-              .filter((plan) => !dietPlans.some((p) => p.name === plan.name)) // Exclude subscribed plans
+              .filter((plan) => !dietPlans.some((p) => p.name === plan.name))
               .map((plan, index) => (
                 <div key={index} className="diet-plan-row">
                   <div className="diet-plan-icon">{plan.icon}</div>
@@ -257,36 +397,41 @@ const MealPlanner = () => {
         </div>
       </Modal>
 
-      <div className="current-day">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>{currentDay.day}</h3>
-          <div className="action-buttons">
-            <button onClick={() => handleRegenerateMeals('current')} title="Regenerate Meals">
-              <FaSyncAlt />
-            </button>
-            <button onClick={() => handleSaveMeals('current')} title="Save Meals">
-              <FaSave />
-            </button>
+      {/* Display current day */}
+      {currentDayMeals && (
+        <div className="current-day">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>{currentDayMeals.day}</h3>
+            <div className="action-buttons">
+              <button onClick={() => handleRegenerateMeals('current')} title="Regenerate Meals">
+                <FaSyncAlt />
+              </button>
+              <button onClick={() => handleSaveMeals('current')} title="Save Meals">
+                <FaSave />
+              </button>
+            </div>
+          </div>
+          <p>{currentDayMeals.date}</p>
+          <p>Total Calories: {currentDayMeals.totalCalories} kcal</p>
+          <div className="meals">
+            {currentDayMeals.meals.map((meal, idx) => (
+              <MealCard key={idx} meal={{
+                name: meal.name,
+                image: meal.image,
+                description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
+                dietaryInfo: meal.dietaryInfo,
+                prepTime: meal.prepTime,
+                cookTime: meal.cookTime,
+                tags: meal.tags,
+              }} />
+            ))}
           </div>
         </div>
-        <p>{currentDay.date}</p>
-        <p>Total Calories: {currentDay.totalCalories} kcal</p>
-        <div className="meals">
-          {currentDay.meals.map((meal, idx) => (
-            <MealCard key={idx} meal={{
-              name: meal.name,
-              image: mealData[idx % mealData.length]?.image || 'default-image.jpg',
-              description: `${meal.type} - ${meal.calories} kcal`,
-              dietaryInfo: { calories: meal.calories },
-              prepTime: 0,
-              cookTime: 0,
-              tags: [],
-            }} />
-          ))}
-        </div>
-      </div>
+      )}
+
+      {/* Display week meal plan */}
       <div className="days-container">
-        {days.map((day, index) => (
+        {mealPlan.map((day, index) => (
           <div key={index} className="current-day">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3>{day.day}</h3>
@@ -305,12 +450,12 @@ const MealPlanner = () => {
               {day.meals.map((meal, idx) => (
                 <MealCard key={idx} meal={{
                   name: meal.name,
-                  image: mealData[idx % mealData.length]?.image || 'default-image.jpg',
-                  description: `${meal.type} - ${meal.calories} kcal`,
-                  dietaryInfo: { calories: meal.calories },
-                  prepTime: 0,
-                  cookTime: 0,
-                  tags: [],
+                  image: meal.image,
+                  description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
+                  dietaryInfo: meal.dietaryInfo,
+                  prepTime: meal.prepTime,
+                  cookTime: meal.cookTime,
+                  tags: meal.tags,
                 }} />
               ))}
             </div>
@@ -318,6 +463,7 @@ const MealPlanner = () => {
         ))}
       </div>
 
+      {/* Grocery list modal */}
       {groceryModalOpen && (
         <>
           <div className="modal-overlay" onClick={handleGroceryModalClose}></div>
