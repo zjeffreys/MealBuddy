@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { format } from 'date-fns';
 import './MealPlanner.css';
 
 const MealPlanner = () => {
@@ -24,6 +25,18 @@ const MealPlanner = () => {
     fetchRandomMeals();
   }, []);
 
+  const currentDay = {
+    day: format(new Date(), 'EEEE'),
+    date: format(new Date(), 'EEE, MMM d'),
+    totalCalories: 1500,
+    meals: [
+      { type: 'Breakfast', name: 'Bagel with Cream Cheese', calories: 400 },
+      { type: 'Lunch', name: 'Chicken Caesar Wrap', calories: 450 },
+      { type: 'Dinner', name: 'Grilled Shrimp Tacos', calories: 500 },
+      { type: 'Snacks', name: 'Protein Bar', calories: 150 },
+    ],
+  };
+
   const days = [
     { day: 'Monday', date: 'Mon, Apr 21', totalCalories: 1530, meals: [
       { type: 'Breakfast', name: 'Avocado Toast', calories: 350 },
@@ -37,12 +50,64 @@ const MealPlanner = () => {
       { type: 'Dinner', name: 'Vegetable Stir Fry', calories: 380 },
       { type: 'Snacks', name: 'Hummus with Carrots', calories: 150 },
     ] },
-    // Add more days as needed
+    { day: 'Wednesday', date: 'Wed, Apr 23', totalCalories: 1400, meals: [
+      { type: 'Breakfast', name: 'Pancakes', calories: 400 },
+      { type: 'Lunch', name: 'Caesar Salad', calories: 350 },
+      { type: 'Dinner', name: 'Spaghetti Bolognese', calories: 500 },
+      { type: 'Snacks', name: 'Apple Slices with Peanut Butter', calories: 150 },
+    ] },
+    { day: 'Thursday', date: 'Thu, Apr 24', totalCalories: 1350, meals: [
+      { type: 'Breakfast', name: 'Oatmeal with Bananas', calories: 300 },
+      { type: 'Lunch', name: 'Turkey Sandwich', calories: 400 },
+      { type: 'Dinner', name: 'Grilled Chicken with Vegetables', calories: 500 },
+      { type: 'Snacks', name: 'Trail Mix', calories: 150 },
+    ] },
+    { day: 'Friday', date: 'Fri, Apr 25', totalCalories: 1450, meals: [
+      { type: 'Breakfast', name: 'Scrambled Eggs with Toast', calories: 350 },
+      { type: 'Lunch', name: 'Tuna Salad', calories: 400 },
+      { type: 'Dinner', name: 'Beef Stir Fry', calories: 550 },
+      { type: 'Snacks', name: 'Yogurt with Granola', calories: 150 },
+    ] },
+    { day: 'Saturday', date: 'Sat, Apr 26', totalCalories: 1500, meals: [
+      { type: 'Breakfast', name: 'Bagel with Cream Cheese', calories: 400 },
+      { type: 'Lunch', name: 'Chicken Caesar Wrap', calories: 450 },
+      { type: 'Dinner', name: 'Grilled Shrimp Tacos', calories: 500 },
+      { type: 'Snacks', name: 'Protein Bar', calories: 150 },
+    ] },
+    { day: 'Sunday', date: 'Sun, Apr 27', totalCalories: 1400, meals: [
+      { type: 'Breakfast', name: 'French Toast', calories: 400 },
+      { type: 'Lunch', name: 'Vegetable Soup', calories: 350 },
+      { type: 'Dinner', name: 'Roast Chicken with Potatoes', calories: 500 },
+      { type: 'Snacks', name: 'Cheese and Crackers', calories: 150 },
+    ] },
   ];
 
   return (
     <div className="meal-planner">
       <h2>Meal Planner</h2>
+      <div className="current-day">
+        <h3>{currentDay.day}</h3>
+        <p>{currentDay.date}</p>
+        <p>Total Calories: {currentDay.totalCalories} kcal</p>
+        <div className="meals">
+          {currentDay.meals.map((meal, idx) => (
+            <div key={idx} className={`meal ${meal.type.toLowerCase()}`}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p>{meal.type}</p>
+                  <p>{meal.name}</p>
+                  <p>{meal.calories} kcal</p>
+                </div>
+                <img
+                  src={mealData[idx % mealData.length]?.image || 'default-image.jpg'}
+                  alt={meal.name}
+                  style={{ width: '80px', height: '80px', borderRadius: '4px', marginLeft: '10px', objectFit: 'cover' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="planner-container">
         {days.map((day, index) => (
           <div key={index} className="planner-day">
@@ -61,7 +126,7 @@ const MealPlanner = () => {
                     <img
                       src={mealData[idx % mealData.length]?.image || 'default-image.jpg'}
                       alt={meal.name}
-                      style={{ width: '80px', height: '80px', borderRadius: '4px', marginLeft: '10px', objectFit: 'cover' }}
+                      style={{ width: '50px', height: '50px', borderRadius: '4px', marginLeft: '10px', objectFit: 'cover' }}
                     />
                   </div>
                 </div>

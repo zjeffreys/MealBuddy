@@ -6,20 +6,91 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.planner-container {
+.current-day {
+  flex: 1 1 100%;
+  border: 2px solid #64b5f6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  background-color: transparent; /* Removed background color */
+}
+
+.current-day h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.current-day p {
+  font-size: 1rem;
+  margin: 5px 0;
+}
+
+.current-day .meals {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+.current-day .meal {
+  background-color: rgba(255, 204, 128, 0.2); /* Lighter shade for breakfast */
+  padding: 10px;
+  border-radius: 8px;
+  width: 200px;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.current-day .meal.lunch {
+  background-color: rgba(129, 199, 132, 0.2); /* Lighter shade for lunch */
+}
+
+.current-day .meal.dinner {
+  background-color: rgba(100, 181, 246, 0.2); /* Lighter shade for dinner */
+}
+
+.current-day .meal.snacks {
+  background-color: rgba(186, 104, 200, 0.2); /* Lighter shade for snacks */
+}
+
+.current-day .meal img {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.current-day .meal p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.planner-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 20px;
 }
 
 .planner-day {
-  flex: 1;
-  min-width: 200px;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.planner-day h3 {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.planner-day p {
+  font-size: 0.9rem;
+  margin: 5px 0;
 }
 
 .meals {
@@ -27,10 +98,13 @@
 }
 
 .meal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
   margin-bottom: 10px;
-  padding: 10px;
   border-radius: 4px;
-  color: #fff;
+  font-size: 0.9rem;
 }
 
 .meal.breakfast {
@@ -51,4 +125,11 @@
 
 .meal p {
   margin: 0;
+}
+
+.meal img {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
 }
