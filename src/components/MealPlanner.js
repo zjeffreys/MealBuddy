@@ -104,9 +104,9 @@ const MealPlanner = () => {
           ))}
         </div>
       </div>
-      <div className="planner-container">
+      <div className="days-container">
         {days.map((day, index) => (
-          <div key={index} className="planner-day">
+          <div key={index} className="current-day">
             <h3>{day.day}</h3>
             <p>{day.date}</p>
             <p>Total Calories: {day.totalCalories} kcal</p>

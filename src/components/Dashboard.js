@@ -70,67 +70,10 @@ const Dashboard = () => {
     <div className="dashboard">
       <h1>Welcome Back!</h1>
       <div className="dashboard-sections">
-        <div className="dashboard-card">
-          <h2>Hungry Now?</h2>
-          <p>Get instant meal suggestions based on what you have</p>
-        </div>
+        {/* Removed the "Hungry Now?" section */}
       </div>
 
       <MealPlanner />
-      <h2>Recommended For You</h2>
-      <Grid container spacing={3}>
-        {recommendedMeals.map((meal) => (
-          <Grid item xs={12} sm={6} md={4} key={meal.id}>
-            <Card
-              sx={{ height: '100%', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-            >
-              <CardMedia
-                component="img"
-                height="200"
-                image={meal.image}
-                alt={meal.name}
-                sx={{ objectFit: 'cover' }}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="h2">
-                  {meal.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {meal.description}
-                </Typography>
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <AccessTimeIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {meal.prep_time + meal.cook_time} min
-                    </Typography>
-                  </Box>
-                </Stack>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {meal.category && meal.category.map((cat, index) => (
-                    <Chip
-                      key={`${index}-${cat}`}
-                      label={cat}
-                      size="small"
-                      color="primary"
-                      sx={{ backgroundColor: '#1976d2', color: 'white' }}
-                    />
-                  ))}
-                  {meal.dietaryTags && meal.dietaryTags.map((tag, index) => (
-                    <Chip
-                      key={`${index}-${tag}`}
-                      label={tag}
-                      size="small"
-                      color="secondary"
-                      sx={{ backgroundColor: '#388e3c', color: 'white' }}
-                    />
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
     </div>
   );
 };
