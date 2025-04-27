@@ -3,9 +3,32 @@ import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import './MealPlanner.css';
 import MealCard from './MealCard';
+import { FaLeaf, FaWeight, FaBacon } from 'react-icons/fa';
 
 const MealPlanner = () => {
   const [mealData, setMealData] = useState([]);
+  const [dietPlans, setDietPlans] = useState([
+    { name: 'Keto', icon: <FaBacon /> },
+    { name: 'Weight Loss', icon: <FaWeight /> },
+    { name: 'Vegan', icon: <FaLeaf /> },
+  ]); // Example diet plans with icons
+  const [isEditing, setIsEditing] = useState(false);
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleAddPlan = () => {
+    const newPlan = prompt('Enter the name of the new diet plan:');
+    if (newPlan) {
+      setDietPlans([...dietPlans, { name: newPlan, icon: <FaLeaf /> }]);
+    }
+  };
+
+  const handleRemovePlan = (index) => {
+    const updatedPlans = dietPlans.filter((_, i) => i !== index);
+    setDietPlans(updatedPlans);
+  };
 
   useEffect(() => {
     const fetchRandomMeals = async () => {
@@ -86,6 +109,30 @@ const MealPlanner = () => {
   return (
     <div className="meal-planner">
       <h2>Meal Planner</h2>
+
+      {/* Display subscribed diet plans with icons */}
+      <div className="diet-plans">
+        <button className="edit-button" onClick={toggleEdit}>
+          {isEditing ? 'Done Editing' : 'Edit Subscriptions'}
+        </button>
+        <h3>Subscribed Diet Plans</h3>
+        <div className="diet-plan-cards">
+          {dietPlans.map((plan, index) => (
+            <div key={index} className="diet-plan-card">
+              <div className="diet-plan-icon">{plan.icon}</div>
+              <h4>{plan.name}</h4>
+              <p>Explore meals tailored to your {plan.name} plan!</p>
+              {isEditing && (
+                <button onClick={() => handleRemovePlan(index)}>Remove</button>
+              )}
+            </div>
+          ))}
+        </div>
+        {isEditing && (
+          <button onClick={handleAddPlan}>Add New Plan</button>
+        )}
+      </div>
+
       <div className="current-day">
         <h3>{currentDay.day}</h3>
         <p>{currentDay.date}</p>
