@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { format } from 'date-fns';
 import './MealPlanner.css';
 import MealCard from './MealCard';
-import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle } from 'react-icons/fa';
+import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSyncAlt, FaSave } from 'react-icons/fa';
 import Modal from 'react-modal';
 
 // Set the app element for accessibility
@@ -78,6 +78,16 @@ const MealPlanner = () => {
   const handleDateSubmit = () => {
     console.log(`Generating grocery list for: ${startDate} to ${endDate}`);
     setGroceryModalOpen(false);
+  };
+
+  const handleRegenerateMeals = (dayIndex) => {
+    console.log(`Regenerating meals for day index: ${dayIndex}`);
+    // Logic to regenerate meals for the specific day
+  };
+
+  const handleSaveMeals = (dayIndex) => {
+    console.log(`Saving meals for day index: ${dayIndex}`);
+    // Logic to save meals for the specific day
   };
 
   useEffect(() => {
@@ -248,7 +258,17 @@ const MealPlanner = () => {
       </Modal>
 
       <div className="current-day">
-        <h3>{currentDay.day}</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>{currentDay.day}</h3>
+          <div className="action-buttons">
+            <button onClick={() => handleRegenerateMeals('current')} title="Regenerate Meals">
+              <FaSyncAlt />
+            </button>
+            <button onClick={() => handleSaveMeals('current')} title="Save Meals">
+              <FaSave />
+            </button>
+          </div>
+        </div>
         <p>{currentDay.date}</p>
         <p>Total Calories: {currentDay.totalCalories} kcal</p>
         <div className="meals">
@@ -268,7 +288,17 @@ const MealPlanner = () => {
       <div className="days-container">
         {days.map((day, index) => (
           <div key={index} className="current-day">
-            <h3>{day.day}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3>{day.day}</h3>
+              <div className="action-buttons">
+                <button onClick={() => handleRegenerateMeals(index)} title="Regenerate Meals">
+                  <FaSyncAlt />
+                </button>
+                <button onClick={() => handleSaveMeals(index)} title="Save Meals">
+                  <FaSave />
+                </button>
+              </div>
+            </div>
             <p>{day.date}</p>
             <p>Total Calories: {day.totalCalories} kcal</p>
             <div className="meals">

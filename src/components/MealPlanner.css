@@ -500,3 +500,42 @@
 .grocery-list-modal button:hover {
   background-color: #45a049;
 }
+
+/* Styles for action buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons button {
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons button:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.action-buttons button:first-child {
+  color: #4caf50;
+}
+
+.action-buttons button:last-child {
+  color: #2196f3;
+}
+
+.action-buttons button svg {
+  width: 18px;
+  height: 18px;
+}
