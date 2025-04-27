@@ -274,6 +274,17 @@
   z-index: 1000;
 }
 
+/* Add overlay styles for the modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
 /* Ensure the modal is perfectly centered and properly sized */
 .modal {
   position: fixed;
@@ -422,4 +433,70 @@
   font-size: 1.8rem; /* Increased size */
   color: #4caf50; /* Green color for subscribed */
   transition: color 0.3s;
+}
+
+/* Add styles for the new button and modal */
+.generate-grocery-list-button {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.generate-grocery-list-button:hover {
+  background-color: #45a049;
+}
+
+/* Modal styles for date range selection */
+.grocery-list-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grocery-list-modal h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.grocery-list-modal input[type="date"] {
+  margin: 10px 0;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.grocery-list-modal button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.grocery-list-modal button:hover {
+  background-color: #45a049;
 }

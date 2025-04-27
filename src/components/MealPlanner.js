@@ -38,6 +38,9 @@ const MealPlanner = () => {
     { name: 'Mediterranean', icon: <FaLeaf /> },
   ]);
   const [showAllPlans, setShowAllPlans] = useState(false);
+  const [groceryModalOpen, setGroceryModalOpen] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -62,6 +65,19 @@ const MealPlanner = () => {
 
   const toggleShowAllPlans = () => {
     setShowAllPlans(!showAllPlans);
+  };
+
+  const handleGenerateClick = () => {
+    setGroceryModalOpen(true);
+  };
+
+  const handleGroceryModalClose = () => {
+    setGroceryModalOpen(false);
+  };
+
+  const handleDateSubmit = () => {
+    console.log(`Generating grocery list for: ${startDate} to ${endDate}`);
+    setGroceryModalOpen(false);
   };
 
   useEffect(() => {
@@ -147,6 +163,13 @@ const MealPlanner = () => {
   return (
     <div className="meal-planner">
       <h2>Meal Planner</h2>
+
+      <button
+        className="generate-grocery-list-button"
+        onClick={handleGenerateClick}
+      >
+        Generate Smart Grocery List
+      </button>
 
       {/* Display subscribed diet plans with icons */}
       <div className="diet-plans">
@@ -264,6 +287,27 @@ const MealPlanner = () => {
           </div>
         ))}
       </div>
+
+      {groceryModalOpen && (
+        <>
+          <div className="modal-overlay" onClick={handleGroceryModalClose}></div>
+          <div className="grocery-list-modal">
+            <h3>Select Date Range</h3>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <button onClick={handleDateSubmit}>Generate</button>
+            <button onClick={handleGroceryModalClose}>Cancel</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
