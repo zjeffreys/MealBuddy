@@ -67,7 +67,6 @@ export const generateMealPlan = async ({
   calorieTarget = null,
 }) => {
   // Fetch all categories and tags to map names to IDs
-  const allCategories = await getMealCategories();
   const allTags = await getDietaryTags();
 
   // Map dietary restrictions to their corresponding IDs

@@ -107,14 +107,12 @@ const theme = createTheme({
 });
 
 function App() {
-  const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const data = await getMealCategories();
-        setCategories(data);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching categories:', err);

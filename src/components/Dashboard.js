@@ -13,9 +13,15 @@ import {
   Grid,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import MealPlanner from './MealPlanner';
 
 const Dashboard = () => {
   const [recommendedMeals, setRecommendedMeals] = useState([]);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+
+  const handleHungryNowClick = () => {
+    setShowRecommendations(true);
+  };
 
   useEffect(() => {
     const fetchRecommendedMeals = async () => {
@@ -71,73 +77,70 @@ const Dashboard = () => {
         <div className="dashboard-card">
           <h2>Hungry Now?</h2>
           <p>Get instant meal suggestions based on what you have</p>
-          <button>I'm Hungry Now!</button>
+          <button onClick={handleHungryNowClick}>I'm Hungry Now!</button>
         </div>
       </div>
 
-      <h2>Recommended For You</h2>
-      <Grid container spacing={3}>
-        {recommendedMeals.map((meal) => (
-          <Grid item xs={12} sm={6} md={4} key={meal.id}>
-            <Card
-              sx={{ height: '100%', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-            >
-              <CardMedia
-                component="img"
-                height="200"
-                image={meal.image}
-                alt={meal.name}
-                sx={{ objectFit: 'cover' }}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="h2">
-                  {meal.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {meal.description}
-                </Typography>
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <AccessTimeIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {meal.prep_time + meal.cook_time} min
+      {showRecommendations && (
+        <>
+          <h2>Recommended For You</h2>
+          <Grid container spacing={3}>
+            {recommendedMeals.map((meal) => (
+              <Grid item xs={12} sm={6} md={4} key={meal.id}>
+                <Card
+                  sx={{ height: '100%', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={meal.image}
+                    alt={meal.name}
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography gutterBottom variant="h6" component="h2">
+                      {meal.name}
                     </Typography>
-                  </Box>
-                </Stack>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {meal.category && meal.category.map((cat, index) => (
-                    <Chip
-                      key={`${index}-${cat}`}
-                      label={cat}
-                      size="small"
-                      color="primary"
-                      sx={{ backgroundColor: '#1976d2', color: 'white' }}
-                    />
-                  ))}
-                  {meal.dietaryTags && meal.dietaryTags.map((tag, index) => (
-                    <Chip
-                      key={`${index}-${tag}`}
-                      label={tag}
-                      size="small"
-                      color="secondary"
-                      sx={{ backgroundColor: '#388e3c', color: 'white' }}
-                    />
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      {meal.description}
+                    </Typography>
+                    <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <AccessTimeIcon color="action" fontSize="small" />
+                        <Typography variant="body2" color="text.secondary">
+                          {meal.prep_time + meal.cook_time} min
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {meal.category && meal.category.map((cat, index) => (
+                        <Chip
+                          key={`${index}-${cat}`}
+                          label={cat}
+                          size="small"
+                          color="primary"
+                          sx={{ backgroundColor: '#1976d2', color: 'white' }}
+                        />
+                      ))}
+                      {meal.dietaryTags && meal.dietaryTags.map((tag, index) => (
+                        <Chip
+                          key={`${index}-${tag}`}
+                          label={tag}
+                          size="small"
+                          color="secondary"
+                          sx={{ backgroundColor: '#388e3c', color: 'white' }}
+                        />
+                      ))}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
+        </>
+      )}
 
-      <h2>Saved Meal Plans</h2>
-      <div className="calendar-container">
-        <iframe
-          src="https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=America%2FNew_York"
-          style={{ border: 0, width: '100%', height: '600px', frameborder: 0, scrolling: 'no' }}
-          title="Saved Meal Plans Calendar"
-        ></iframe>
-      </div>
+      <MealPlanner />
     </div>
   );
 };

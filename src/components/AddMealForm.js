@@ -13,13 +13,11 @@ import {
   Select,
   MenuItem,
   Chip,
-  Autocomplete,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 import { supabase } from '../lib/supabaseClient';
 import OpenAI from 'openai';
-import { useNavigate } from 'react-router-dom';
 import { createMeal } from '../services/mealService';
 
 const openai = new OpenAI({
@@ -40,12 +38,10 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 const AddMealForm = () => {
-  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -145,19 +141,6 @@ const AddMealForm = () => {
     }
   };
 
-  const fetchDietaryTags = async () => {
-    const { data, error } = await supabase
-      .from('dietary_tags')
-      .select('*');
-
-    if (error) {
-      console.error('Error fetching dietary tags:', error);
-      return [];
-    }
-
-    return data;
-  };
-
   const handleGenerateRecipe = async () => {
     if (!imageFile) {
       setError('Please upload an image');
@@ -172,7 +155,7 @@ const AddMealForm = () => {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('meal-images')
         .upload(fileName, imageFile);
 
@@ -226,7 +209,6 @@ const AddMealForm = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess(false);
   
     if (!formData.image) {
       setError('Image upload failed. Please try again.');
@@ -241,7 +223,6 @@ const AddMealForm = () => {
       // Save the meal to the database without the description
       const savedMeal = await createMeal(dataToSave);
       console.log('Meal saved:', savedMeal);
-      setSuccess(true);
       setError('');
       setFormData({
         name: '',

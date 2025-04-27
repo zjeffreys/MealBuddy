@@ -1,5 +1,4 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
@@ -55,4 +54,4 @@ export default function ProtectedRoute({ children }) {
   }
 
   return children;
-} 
+}

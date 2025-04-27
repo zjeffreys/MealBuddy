@@ -1,0 +1,54 @@
+/* MealPlanner.css */
+.meal-planner {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.planner-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.planner-day {
+  flex: 1;
+  min-width: 200px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.meals {
+  margin-top: 10px;
+}
+
+.meal {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.meal.breakfast {
+  background-color: #ffcc80; /* Light orange for breakfast */
+}
+
+.meal.lunch {
+  background-color: #81c784; /* Light green for lunch */
+}
+
+.meal.dinner {
+  background-color: #64b5f6; /* Light blue for dinner */
+}
+
+.meal.snacks {
+  background-color: #ba68c8; /* Light purple for snacks */
+}
+
+.meal p {
+  margin: 0;
+}
