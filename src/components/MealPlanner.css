@@ -226,6 +226,81 @@
   overflow: hidden; /* Prevent horizontal overflow */
 }
 
+/* Make the days in planner display their meals in a 2x2 grid (except current day) */
+.days-container .current-day .meals {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Force two equal columns */
+  grid-template-rows: auto auto; /* Two rows with auto height */
+  gap: 10px; /* Space between grid items */
+  overflow: visible !important; /* Remove scrolling behavior */
+  padding: 10px 5px;
+  margin: 0;
+  max-width: 100%;
+  width: 100%;
+  flex-wrap: wrap;
+  white-space: normal;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* Style for grid items in day meals */
+.days-container .current-day .meals > * {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: unset !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Card styling for grid items */
+.days-container .current-day .meals .MuiCard-root {
+  margin: 0 !important;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+}
+
+/* Make images smaller */
+.days-container .current-day .meals .MuiCardMedia-root {
+  height: 110px !important;
+  object-fit: cover !important;
+}
+
+/* Smaller typography for meal titles */
+.days-container .current-day .meals .MuiTypography-h6,
+.days-container .current-day .meals h3,
+.days-container .current-day .meal-card h3 {
+  font-size: 0.9rem !important;
+  line-height: 1.2 !important;
+  margin-bottom: 4px !important;
+}
+
+/* Smaller description text */
+.days-container .current-day .meals .MuiTypography-body2,
+.days-container .current-day .meals p,
+.days-container .current-day .meal-card p {
+  font-size: 0.8rem !important;
+  margin-bottom: 4px !important;
+}
+
+/* Adjust card content padding */
+.days-container .current-day .meals .MuiCardContent-root {
+  padding: 8px !important;
+  flex-grow: 1;
+}
+
+/* Make chip tags smaller */
+.days-container .current-day .meals .MuiChip-root {
+  height: 20px !important;
+  font-size: 0.7rem !important;
+}
+
+/* Adjust stack spacing */
+.days-container .current-day .meals .MuiStack-root {
+  margin-bottom: 4px !important;
+}
+
 @media (max-width: 768px) {
   .days-container {
     grid-template-columns: 1fr;
