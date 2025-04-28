@@ -446,6 +446,60 @@
   padding-top: 0; /* Removed padding since we don't need space for the button anymore */
 }
 
+/* Clickable meal styling */
+.meal-card-clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.meal-card-clickable:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.meal-card-clickable:active {
+  transform: translateY(-2px) !important;
+}
+
+/* Add a subtle overlay effect on hover to indicate interactivity */
+.meal-card-clickable::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0);
+  transition: background 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.meal-card-clickable:hover::after {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Add "View Recipe" text that appears on hover */
+.meal-card-clickable .view-recipe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.meal-card-clickable:hover .view-recipe {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .diet-plans h3 {
   font-size: 1.3rem;
   margin-bottom: 10px;
@@ -866,4 +920,74 @@
   min-height: 300px;
   font-size: 1.2rem;
   color: #666;
+}
+
+/* Meal Detail Modal Styles */
+.meal-detail-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 85vh;
+  height: auto;
+  overflow: hidden;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+.meal-detail-content {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.meal-image-container {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  position: relative;
+}
+
+.meal-detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.meal-detail-info {
+  padding: 24px;
+}
+
+/* Media queries for responsive design */
+@media (min-width: 768px) {
+  .meal-image-container {
+    height: 300px;
+  }
+
+  .meal-detail-modal {
+    width: 70%;
+  }
+}
+
+@media (max-width: 480px) {
+  .meal-detail-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .meal-image-container {
+    height: 200px;
+  }
+
+  .meal-detail-info {
+    padding: 16px;
+  }
 }

@@ -412,6 +412,7 @@ const MealPlanner = () => {
           >
             {day.meals.map((meal, idx) => (
               <MealCard key={idx} meal={{
+                id: meal.id,
                 name: meal.name,
                 image: meal.image,
                 description: `${meal.type} - ${meal.dietaryInfo.calories} kcal`,
@@ -419,6 +420,10 @@ const MealPlanner = () => {
                 prepTime: meal.prepTime,
                 cookTime: meal.cookTime,
                 tags: meal.tags,
+                ingredients: meal.ingredients || [],
+                instructions: meal.instructions || [],
+                chef: meal.chef,
+                category: meal.category
               }} />
             ))}
           </div>

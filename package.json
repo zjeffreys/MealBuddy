@@ -14,6 +14,8 @@
     "chalk": "^5.4.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.3.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "openai": "^4.95.1",
     "ora": "^8.2.0",
     "react": "^19.1.0",
@@ -22,6 +24,7 @@
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.5.2",
     "react-scripts": "^5.0.1",
+    "react-to-print": "^3.1.0",
     "web-vitals": "^4.2.4"
   },
   "scripts": {
