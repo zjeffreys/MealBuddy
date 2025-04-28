@@ -38,7 +38,6 @@
 
 .current-day .meals {
   max-width: 100%;
-  overflow-x: auto;
   display: flex;
   flex-wrap: nowrap;
   gap: 16px;
@@ -48,14 +47,23 @@
   scrollbar-width: thin; /* For Firefox */
 }
 
-.current-day .meals > * {
-  flex: 0 0 auto;
-  width: calc(100% - 32px); /* Full width minus gap on mobile */
-  max-width: 280px; /* Maximum width on larger screens */
+/* Desktop view - horizontal scroll */
+@media (min-width: 769px) {
+  .current-day .meals {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  
+  .current-day .meals > * {
+    flex: 0 0 auto;
+    width: calc(100% - 32px); /* Full width minus gap on mobile */
+    max-width: 280px; /* Maximum width on larger screens */
+  }
 }
 
-/* Responsive adjustments for smaller screens */
+/* Responsive mode - 2x2 grid for meals */
 @media (max-width: 768px) {
+  /* Container styling */
   .current-day {
     padding: 15px 10px;
   }
@@ -64,34 +72,100 @@
     font-size: 1.3rem;
   }
   
-  .current-day .meals-container {
+  /* Clear existing flexbox and horizontal scroll styles */
+  .current-day .meals {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Force two equal columns */
+    grid-template-rows: auto auto; /* Two rows with auto height */
+    gap: 10px; /* Space between grid items */
+    overflow: visible !important; /* Remove scrolling behavior */
+    padding: 10px 5px;
+    margin: 0;
     max-width: 100%;
-    overflow: hidden;
+    width: 100%;
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    white-space: normal; /* Allow text wrapping */
+    -webkit-overflow-scrolling: auto;
+  }
+  
+  /* Style for grid items to ensure they fill their cells */
+  .current-day .meals > * {
+    flex: 0 0 100% !important; /* Override flex settings */
+    width: 100% !important; /* Force full width in cell */
+    max-width: 100% !important;
+    min-width: unset !important;
+    margin: 0 !important; /* Remove margins that affect grid */
+    transform: none !important;
+    height: auto !important;
+  }
+  
+  /* Card styling for grid items */
+  .current-day .meals .MuiCard-root {
+    margin: 0 !important;
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+  }
+  
+  /* Make images smaller */
+  .current-day .meals .MuiCardMedia-root {
+    height: 110px !important;
+    object-fit: cover !important;
+  }
+  
+  /* Smaller typography for meal titles */
+  .current-day .meals .MuiTypography-h6,
+  .current-day .meals h3,
+  .current-day .meal-card h3 {
+    font-size: 0.9rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Smaller description text */
+  .current-day .meals .MuiTypography-body2,
+  .current-day .meals p,
+  .current-day .meal-card p {
+    font-size: 0.8rem !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Adjust card content padding */
+  .current-day .meals .MuiCardContent-root {
+    padding: 8px !important;
+    flex-grow: 1;
+  }
+  
+  /* Make chip tags smaller */
+  .current-day .meals .MuiChip-root {
+    height: 20px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  /* Adjust stack spacing */
+  .current-day .meals .MuiStack-root {
+    margin-bottom: 4px !important;
   }
 }
 
-/* Further adjustments for mobile screens */
+/* Further improvements for extra small screens */
 @media (max-width: 480px) {
-  .meal-planner {
-    padding: 15px 10px;
+  /* On very small screens, keep the 2x2 grid but make the elements even smaller */
+  .current-day .meals {
+    gap: 8px;
+    padding: 8px 3px;
   }
   
-  .current-day {
-    padding: 12px 8px;
-    margin-bottom: 20px;
+  /* Make images smaller on very small screens */
+  .current-day .meals .MuiCardMedia-root {
+    height: 90px !important;
   }
   
-  .current-day h3 {
-    font-size: 1.2rem;
-  }
-  
-  .current-day p {
-    font-size: 0.9rem;
-  }
-  
-  .current-day .meals > * {
-    width: calc(100% - 16px);
-    max-width: 220px;
+  /* Make typography smaller on very small screens */
+  .current-day .meals .MuiTypography-h6,
+  .current-day .meals h3 {
+    font-size: 0.85rem !important;
   }
 }
 
