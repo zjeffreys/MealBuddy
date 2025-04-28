@@ -454,9 +454,22 @@ const MealPlanner = () => {
             <div key={index} className="diet-plan-card">
               <div className="diet-plan-icon">{plan.icon}</div>
               <h4>{plan.name}</h4>
-              <p>Explore meals tailored to your {plan.name} plan!</p>
             </div>
           ))}
+          <div 
+            className="diet-plan-card" 
+            onClick={toggleModal}
+            style={{ 
+              cursor: 'pointer', 
+              backgroundColor: '#f0f8ff', 
+              borderStyle: 'dashed'
+            }}
+          >
+            <div className="diet-plan-icon" style={{ color: '#2196f3' }}>
+              <FaPlusCircle />
+            </div>
+            <h4>Add More</h4>
+          </div>
         </div>
       </div>
 
