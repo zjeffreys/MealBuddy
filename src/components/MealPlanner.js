@@ -445,9 +445,6 @@ const MealPlanner = () => {
 
       {/* Display subscribed diet plans with icons */}
       <div className="diet-plans">
-        <button className="edit-button" onClick={toggleModal} aria-label="Manage Subscriptions">
-          Manage Subscriptions
-        </button>
         <h3>Subscribed Diet Plans</h3>
         <div className="diet-plan-cards">
           {dietPlans.map((plan, index) => (

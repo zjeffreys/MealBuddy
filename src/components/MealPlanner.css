@@ -443,7 +443,7 @@
 .diet-plans {
   position: relative;
   margin-bottom: 20px;
-  padding-top: 40px; /* Space for the manage button */
+  padding-top: 0; /* Removed padding since we don't need space for the button anymore */
 }
 
 .diet-plans h3 {
@@ -455,25 +455,6 @@
   .diet-plans h3 {
     font-size: 1.2rem;
   }
-}
-
-.diet-plans .edit-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  z-index: 10;
-}
-
-.diet-plans .edit-button:hover {
-  background-color: #45a049;
 }
 
 /* New horizontal pill layout for diet plan cards */
