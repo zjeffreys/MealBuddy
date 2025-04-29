@@ -120,6 +120,12 @@ export default function Header() {
           </ListItemIcon>
           <ListItemText primary="Recipes" />
         </ListItem>
+        <ListItem button onClick={() => handleNavigation('/pricing')}>
+          <ListItemIcon>
+            <LockIcon />
+          </ListItemIcon>
+          <ListItemText primary="Pricing" />
+        </ListItem>
         {user && (
           <>
             <ListItem button onClick={() => handleNavigation('/dashboard')}>
@@ -205,6 +211,7 @@ export default function Header() {
           // Desktop Menu
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {renderNavButton('/recipes', 'Recipes')}
+            {renderNavButton('/pricing', 'Pricing')}
             {renderNavButton('/dashboard', 'Dashboard', true)}
             {user && (
               <Button

@@ -1,0 +1,25 @@
+.pricing-container {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+.pricing-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem auto;
+  max-width: 400px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h2 {
+  color: #5ebd21;
+  margin-bottom: 0.5rem;
+}
+
+.pricing-card p {
+  margin: 0.5rem 0;
+  color: #666;
+}
