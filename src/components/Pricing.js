@@ -5,12 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { subscriptionType } = useAuth();
+  const { subscriptionType, user } = useAuth();
 
   const handleCheckout = async () => {
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/create-checkout-session`, {
         product_id: 'prod_SDRBtowMYP9yl9',
+        user_id: user.id, // Pass the user ID
       });
       window.location.href = response.data.url;
     } catch (error) {
