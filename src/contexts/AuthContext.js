@@ -11,16 +11,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [subscriptionType, setSubscriptionType] = useState(null);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -29,6 +32,30 @@ export function AuthProvider({ children }) {
       subscription?.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    const fetchSubscriptionType = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('subscription_type')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+          setSubscriptionType(data?.subscription_type || 'freemium');
+        } catch (error) {
+          console.error('Error fetching subscription type:', error);
+          setSubscriptionType('freemium');
+        }
+      } else {
+        setSubscriptionType(null);
+      }
+    };
+
+    fetchSubscriptionType();
+  }, [user]);
 
   const createUserProfile = async (userId) => {
     try {
@@ -113,6 +140,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     error,
+    subscriptionType,
     signUp,
     signIn,
     signOut,
@@ -122,7 +150,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {!loading ? children : <div>Loading...</div>}
     </AuthContext.Provider>
   );
 }

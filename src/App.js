@@ -16,6 +16,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RecipeDetails from './components/RecipeDetails';
 import Dashboard from './components/Dashboard';
 import Pricing from './components/Pricing';
+import AccountSettings from './components/AccountSettings';
 
 const theme = createTheme({
   palette: {
@@ -159,6 +160,7 @@ function App() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/account-settings" element={<AccountSettings />} />
               </Routes>
             </Container>
             {error && (

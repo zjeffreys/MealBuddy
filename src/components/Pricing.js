@@ -1,20 +1,11 @@
 import React from 'react';
-import './Pricing.css';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Pricing = () => {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
-
-  const handleFreemium = () => {
-    if (currentUser) {
-      navigate('/dashboard');
-    } else {
-      navigate('/signup');
-    }
-  };
+  const { subscriptionType } = useAuth();
 
   const handleCheckout = async () => {
     try {
@@ -27,20 +18,51 @@ const Pricing = () => {
     }
   };
 
+  const handleFreemium = () => {
+    if (!subscriptionType) {
+      navigate('/signup');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
+  const handlePremium = () => {
+    if (!subscriptionType) {
+      navigate('/signup');
+    } else {
+      handleCheckout();
+    }
+  };
+
   return (
-    <div className="pricing-container">
-      <h1>Pricing Plans</h1>
-      <div className="pricing-card">
-        <h2>Freemium Plan</h2>
-        <p>$0/month</p>
-        <p>Basic features for free.</p>
-        <button onClick={handleFreemium}>Choose Freemium</button>
-      </div>
-      <div className="pricing-card">
+    <div className="pricing-container" style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+      {subscriptionType && (
+        <div style={{
+          backgroundColor: '#5ebd21',
+          color: '#fff',
+          padding: '10px 20px',
+          borderRadius: '15px',
+          textAlign: 'center',
+          marginBottom: '20px',
+          width: '100%',
+        }}>
+          <p>You are currently subscribed to the <strong>{subscriptionType}</strong> plan.</p>
+        </div>
+      )}
+      <h1 style={{ width: '100%', textAlign: 'center' }}>Pricing Plans</h1>
+      {subscriptionType !== 'freemium' && (
+        <div className="pricing-card" style={{ border: '2px solid #5ebd21', borderRadius: '15px', padding: '20px', flex: '1 1 300px', textAlign: 'center' }}>
+          <h2>Freemium Plan</h2>
+          <p>$0/month</p>
+          <p>Basic features for free.</p>
+          <button style={{ backgroundColor: '#5ebd21', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '10px', cursor: 'pointer' }} onClick={handleFreemium}>Get Started</button>
+        </div>
+      )}
+      <div className="pricing-card" style={{ border: '2px solid #5ebd21', borderRadius: '15px', padding: '20px', flex: '1 1 300px', textAlign: 'center' }}>
         <h2>Premium Plan</h2>
         <p>$4.99/month</p>
         <p>Advanced features and priority support.</p>
-        <button onClick={handleCheckout}>Choose Premium</button>
+        <button style={{ backgroundColor: '#5ebd21', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '10px', cursor: 'pointer' }} onClick={handlePremium}>{subscriptionType === 'freemium' ? 'Upgrade' : 'Get Started'}</button>
       </div>
     </div>
   );
