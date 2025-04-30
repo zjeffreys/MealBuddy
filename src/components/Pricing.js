@@ -62,7 +62,7 @@ const Pricing = () => {
       <div className="pricing-card" style={{ border: '2px solid #5ebd21', borderRadius: '15px', padding: '20px', flex: '1 1 300px', textAlign: 'center' }}>
         <h2>Premium Plan</h2>
         <p>$4.99/month</p>
-        <p>Advanced features and priority support.</p>
+        <p>Advanced features and priority support TODO.</p>
         <button style={{ backgroundColor: '#5ebd21', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '10px', cursor: 'pointer' }} onClick={handlePremium}>{subscriptionType === 'freemium' ? 'Upgrade' : 'Get Started'}</button>
       </div>
     </div>
