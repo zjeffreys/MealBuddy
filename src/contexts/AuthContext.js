@@ -30,6 +30,16 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  const createUserProfile = async (userId) => {
+    try {
+      const { error } = await supabase.from('user_profiles').insert({ id: userId }, { returning: 'minimal' });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      throw error;
+    }
+  };
+
   const signUp = async (email, password) => {
     try {
       setError('');
@@ -38,6 +48,9 @@ export function AuthProvider({ children }) {
         password,
       });
       if (error) throw error;
+      if (data.user) {
+        await createUserProfile(data.user.id);
+      }
       return data;
     } catch (error) {
       setError(error.message);
@@ -75,6 +88,9 @@ export function AuthProvider({ children }) {
     try {
       setError('');
       const data = await signInWithGoogle();
+      if (data.user) {
+        await createUserProfile(data.user.id);
+      }
       return data;
     } catch (error) {
       setError(error.message);
@@ -109,4 +125,4 @@ export function AuthProvider({ children }) {
       {!loading && children}
     </AuthContext.Provider>
   );
-} 
+}
