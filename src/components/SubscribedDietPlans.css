@@ -1,0 +1,51 @@
+/* SubscribedDietPlans.css */
+
+.subscribed-diet-plans {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.subscribed-diet-plans h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.diet-plan-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.diet-plan-card {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.diet-plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.diet-plan-icon {
+  font-size: 1.5rem;
+  margin-right: 10px;
+  color: #4caf50;
+}
+
+.diet-plan-card h4 {
+  font-size: 1rem;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}

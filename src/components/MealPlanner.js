@@ -6,6 +6,7 @@ import MealCard from './MealCard';
 import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSyncAlt, FaSave, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import Modal from 'react-modal';
 import { getImageUrl } from '../services/mealService';
+import ManageDietPlansModal from './ManageDietPlansModal';
 
 // Set the app element for accessibility
 Modal.setAppElement('#root');
@@ -15,7 +16,7 @@ const MealPlanner = () => {
   const [mealsLoading, setMealsLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState([]);
   const [currentDayMeals, setCurrentDayMeals] = useState(null);
-  
+
   const [dietPlans, setDietPlans] = useState([
     { name: 'Keto', icon: <FaBacon /> },
     { name: 'Weight Loss', icon: <FaWeight /> },
@@ -475,67 +476,15 @@ const MealPlanner = () => {
         </div>
       </div>
 
-      <Modal
+      <ManageDietPlansModal
         isOpen={isModalOpen}
         onRequestClose={toggleModal}
-        contentLabel="Manage Diet Plans"
-        className="modal"
-        overlayClassName="overlay"
-        ariaHideApp={false} // Fix for screen readers
-      >
-        <FaTimes className="close-icon" onClick={toggleModal} aria-label="Close dialog" />
-        <h2>Manage Diet Plans</h2>
-
-        {/* Display subscribed plans at the top */}
-        <div className="subscribed-plans">
-          <h3>Subscribed Plans</h3>
-          <div className="available-plans">
-            {dietPlans.map((plan, index) => (
-              <div key={index} className="diet-plan-row">
-                <div className="diet-plan-icon">{plan.icon}</div>
-                <h4>{plan.name}</h4>
-                <button
-                  onClick={() => handleToggleSubscription(plan)}
-                  className="subscription-button subscribed"
-                  aria-label={`Unsubscribe from ${plan.name}`}
-                >
-                  Subscribed
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Search and discover more plans */}
-        <div className="discover-plans">
-          <h3>Discover More Plans</h3>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search for diet plans..."
-            value={searchQuery}
-            onChange={handleSearch}
-            aria-label="Search for diet plans"
-          />
-          <div className="available-plans">
-            {filteredPlans
-              .filter((plan) => !dietPlans.some((p) => p.name === plan.name))
-              .map((plan, index) => (
-                <div key={index} className="diet-plan-row">
-                  <div className="diet-plan-icon">{plan.icon}</div>
-                  <h4>{plan.name}</h4>
-                  <button
-                    onClick={() => handleToggleSubscription(plan)}
-                    className="subscription-button unsubscribed"
-                    aria-label={`Subscribe to ${plan.name}`}
-                  >
-                    Subscribe
-                  </button>
-                </div>
-              ))}
-          </div>
-        </div>
-      </Modal>
+        dietPlans={dietPlans}
+        handleToggleSubscription={handleToggleSubscription}
+        searchQuery={searchQuery}
+        handleSearch={handleSearch}
+        filteredPlans={filteredPlans}
+      />
 
       {/* Display current day */}
       {currentDayMeals && renderDayMeals(currentDayMeals, 'current')}
