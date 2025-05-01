@@ -22,6 +22,8 @@ import { meals as staticMeals } from '../data/meals';
 import MealCard from './MealCard';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import SendIcon from '@mui/icons-material/Send';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const Dashboard = () => {
   const [cravingInput, setCravingInput] = useState('');
@@ -150,11 +152,13 @@ const Dashboard = () => {
     <div className="dashboard">
       <h1>Welcome Back!</h1>
       <div className="dashboard-sections">
-        <SubscribedDietPlans 
-          dietPlans={filteredPlans} 
-          setDietPlans={setDietPlans} 
-          toggleModal={toggleModal} 
-        />
+        <div style={{ marginBottom: 2 }}>
+          <SubscribedDietPlans 
+            dietPlans={filteredPlans} 
+            setDietPlans={setDietPlans} 
+            toggleModal={toggleModal} 
+          />
+        </div>
 
         <Modal
           isOpen={isModalOpen}
@@ -170,30 +174,56 @@ const Dashboard = () => {
         </Modal>
 
         <Card
+          className="smart-meal-card"
           style={{
             margin: '20px 0',
             padding: 0,
-            background: '#f9f9f9',
             borderRadius: '8px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             width: '100%',
             border: 'none',
             position: 'relative', // for arrow positioning
+            overflow: 'hidden',
           }}
         >
           <CardContent style={{ padding: 0 }}>
-            <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 'bold', color: '#333', padding: '20px 20px 0 20px' }}>
-              🌟 Smart Meal Suggestions
+            <h2 className="smart-meal-title">
+              Smart Meal Suggestions
             </h2>
-            <Typography variant="body1" color="textSecondary" style={{ marginBottom: '20px', fontSize: '1.2rem', fontStyle: 'italic', padding: '0 20px' }}>
-              {timeOfDay === 'breakfast' && '☀️ Good Morning! Start your day with a delicious breakfast.'}
-              {timeOfDay === 'lunch' && '🌞 Good Afternoon! Here are some lunch ideas to keep you energized.'}
-              {timeOfDay === 'dinner' && '🌙 Good Evening! Unwind with these dinner suggestions.'}
+            <Typography className="smart-meal-subtext" variant="body2">
+              Get inspired! Browse personalized meal ideas or search for something you’re craving below.
             </Typography>
-            <p style={{ fontSize: '1.3rem', fontWeight: '500', color: '#555', padding: '0 20px' }}>
-              Suggestions for {timeOfDay}:
-            </p>
+            <Box mt={2} style={{ padding: '0 0 20px 0' }}>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <TextField
+                  label="I'm craving..."
+                  variant="outlined"
+                  fullWidth
+                  value={cravingInput}
+                  onChange={(e) => setCravingInput(e.target.value)}
+                  style={{ marginBottom: '10px', borderRadius: '5px' }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCravingSubmit(); }}
+                  InputProps={{
+                    style: { paddingRight: 48 },
+                  }}
+                />
+                <button
+                  onClick={handleCravingSubmit}
+                  className="send-craving-btn"
+                  aria-label="Send"
+                  tabIndex={0}
+                  type="button"
+                >
+                  <ArrowForwardIcon style={{ fontSize: 28, display: 'block', margin: 'auto' }} />
+                </button>
+              </div>
+            </Box>
             <div style={{ position: 'relative', width: '100%', minHeight: 420 }}>
+              <Typography variant="body1" color="textSecondary" className="meal-message-bubble">
+                {timeOfDay === 'breakfast' && '☀️ Good Morning! Start your day with these breakfast suggestions.'}
+                {timeOfDay === 'lunch' && '🌞 Good Afternoon! Here are some lunch ideas to keep you energized.'}
+                {timeOfDay === 'dinner' && '🌙 Good Evening! Unwind with these dinner suggestions.'}
+              </Typography>
               {/* Left Arrow - overlay inside scroll area */}
               <button
                 style={{
@@ -302,23 +332,6 @@ const Dashboard = () => {
                 })}
               </div>
             </div>
-            <Box mt={4} style={{ padding: '0 20px 20px 20px' }}>
-              <TextField
-                label="I'm craving..."
-                variant="outlined"
-                fullWidth
-                value={cravingInput}
-                onChange={(e) => setCravingInput(e.target.value)}
-                style={{ marginBottom: '10px', borderRadius: '5px' }}
-              />
-              <Button
-                variant="contained"
-                style={{ backgroundColor: '#4caf50', color: '#fff', fontWeight: 'bold', padding: '10px 20px', borderRadius: '5px' }}
-                onClick={handleCravingSubmit}
-              >
-                🍴 Find Meals
-              </Button>
-            </Box>
           </CardContent>
         </Card>
       </div>

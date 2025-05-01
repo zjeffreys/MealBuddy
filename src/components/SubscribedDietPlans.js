@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaPlusCircle, FaBacon, FaWeight, FaLeaf } from 'react-icons/fa';
 import ManageDietPlansModal from './ManageDietPlansModal';
 import './SubscribedDietPlans.css';
+import Typography from '@mui/material/Typography';
 
 const SubscribedDietPlans = ({ dietPlans, setDietPlans }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +38,13 @@ const SubscribedDietPlans = ({ dietPlans, setDietPlans }) => {
   return (
     <div className="subscribed-diet-plans" style={{ width: '100%' }}>
       <h3>Subscribed Diet Plans</h3>
+      <Typography variant="body2" color="textSecondary" style={{ margin: '10px 0 0 0', fontSize: '1rem', padding: '0 0 10px 0' }}>
+        Select or manage your diet plans above to personalize your meal suggestions!
+      </Typography>
       <div className="diet-plan-cards">
+        <Typography className="meal-message-bubble" variant="body1">
+          Personalize your experience! Select or manage your diet plans below to get tailored meal suggestions.
+        </Typography>
         {dietPlans.map((plan, index) => (
           <div key={index} className="diet-plan-card">
             <div className="diet-plan-icon">{plan.icon}</div>
