@@ -42,9 +42,6 @@ const SubscribedDietPlans = ({ dietPlans, setDietPlans }) => {
         Select or manage your diet plans above to personalize your meal suggestions!
       </Typography>
       <div className="diet-plan-cards">
-        <Typography className="meal-message-bubble" variant="body1">
-          Personalize your experience! Select or manage your diet plans below to get tailored meal suggestions.
-        </Typography>
         {dietPlans.map((plan, index) => (
           <div key={index} className="diet-plan-card">
             <div className="diet-plan-icon">{plan.icon}</div>

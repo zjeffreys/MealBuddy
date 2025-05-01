@@ -11,6 +11,11 @@ import {
   Grid,
   TextField,
   Button,
+  Chip,
+  InputAdornment,
+  IconButton,
+  Paper,
+  Divider,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import MealPlanner from './MealPlanner';
@@ -22,7 +27,9 @@ import { meals as staticMeals } from '../data/meals';
 import MealCard from './MealCard';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import SendIcon from '@mui/icons-material/Send';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const Dashboard = () => {
@@ -111,18 +118,50 @@ const Dashboard = () => {
 
   const handleCravingSubmit = async () => {
     try {
-      const { data: mealsData, error } = await supabase
+      const query = `${cravingInput} ${filteredPlans.map(plan => plan.name).join(' ')}`.trim();
+
+      // Fetch similar meals from the backend
+      const response = await fetch(`https://mealbuddybackend.onrender.com/search_meals?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch similar meals from backend');
+      }
+
+      const similarMeals = await response.json();
+
+      if (!similarMeals || similarMeals.length === 0) {
+        setSuggestedMeals([]);
+        return;
+      }
+
+      // Extract IDs from the similar meals
+      const mealIds = similarMeals.map(meal => meal.id);
+
+      // Fetch meal details from Supabase using the IDs
+      const { data: mealsData, error: mealsError } = await supabase
         .from('meals')
         .select('*')
-        .ilike('tags', `%${cravingInput}%`)
-        .order('created_at', { ascending: false })
-        .limit(3);
+        .in('id', mealIds);
 
-      if (error) throw error;
+      if (mealsError) {
+        throw new Error('Failed to fetch meals from Supabase');
+      }
 
-      console.log(mealsData);
+      // Ensure each meal has a valid image source
+      const processedMeals = (mealsData || []).map(meal => ({
+        ...meal,
+        imageUrl: meal.image || '/public/assets/logo.svg', // Default image if none exists
+      }));
+
+      setSuggestedMeals(processedMeals);
     } catch (err) {
       console.error('Error fetching meals based on craving:', err);
+      setSuggestedMeals([]);
     }
   };
 
@@ -173,125 +212,202 @@ const Dashboard = () => {
           {/* Add logic for managing diet plans here */}
         </Modal>
 
-        <Card
+        <Paper
+          elevation={2}
           className="smart-meal-card"
-          style={{
+          sx={{
             margin: '20px 0',
             padding: 0,
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            borderRadius: '12px',
             width: '100%',
             border: 'none',
-            position: 'relative', // for arrow positioning
+            position: 'relative',
             overflow: 'hidden',
+            background: '#fcfcfc', // Lighter, more subtle background color
           }}
         >
-          <CardContent style={{ padding: 0 }}>
-            <h2 className="smart-meal-title">
-              Smart Meal Suggestions
-            </h2>
-            <Typography className="smart-meal-subtext" variant="body2">
-              Get inspired! Browse personalized meal ideas or search for something you’re craving below.
-            </Typography>
-            <Box mt={2} style={{ padding: '0 0 20px 0' }}>
-              <div style={{ position: 'relative', width: '100%' }}>
-                <TextField
-                  label="I'm craving..."
-                  variant="outlined"
-                  fullWidth
-                  value={cravingInput}
-                  onChange={(e) => setCravingInput(e.target.value)}
-                  style={{ marginBottom: '10px', borderRadius: '5px' }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCravingSubmit(); }}
-                  InputProps={{
-                    style: { paddingRight: 48 },
-                  }}
-                />
-                <button
-                  onClick={handleCravingSubmit}
-                  className="send-craving-btn"
-                  aria-label="Send"
-                  tabIndex={0}
-                  type="button"
-                >
-                  <ArrowForwardIcon style={{ fontSize: 28, display: 'block', margin: 'auto' }} />
-                </button>
-              </div>
-            </Box>
-            <div style={{ position: 'relative', width: '100%', minHeight: 420 }}>
-              <Typography variant="body1" color="textSecondary" className="meal-message-bubble">
-                {timeOfDay === 'breakfast' && '☀️ Good Morning! Start your day with these breakfast suggestions.'}
-                {timeOfDay === 'lunch' && '🌞 Good Afternoon! Here are some lunch ideas to keep you energized.'}
-                {timeOfDay === 'dinner' && '🌙 Good Evening! Unwind with these dinner suggestions.'}
+          <Box sx={{ padding: '20px 24px 0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+              <RestaurantIcon sx={{ fontSize: 28, marginRight: '12px', color: '#4a90e2' }} />
+              <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+                Smart Meal Suggestions
               </Typography>
-              {/* Left Arrow - overlay inside scroll area */}
-              <button
-                style={{
-                  position: 'absolute',
-                  left: 8,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 3,
-                  background: 'rgba(255,255,255,0.85)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 36,
-                  height: 36,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: canScrollLeft ? 'pointer' : 'not-allowed',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-                  opacity: canScrollLeft ? 1 : 0.5,
-                  pointerEvents: canScrollLeft ? 'auto' : 'none',
-                  transition: 'opacity 0.2s',
+            </Box>
+            
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+              Get inspired! Browse personalized meal ideas or search for something specific.
+            </Typography>
+
+            {/* Search input with better styling */}
+            <Box sx={{ position: 'relative', mb: 3 }}>
+              <TextField
+                fullWidth
+                placeholder="I'm craving..."
+                variant="outlined"
+                value={cravingInput}
+                onChange={(e) => setCravingInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCravingSubmit(); }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: cravingInput ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        aria-label="clear search"
+                        onClick={() => setCravingInput('')}
+                        edge="end"
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                  sx: {
+                    borderRadius: '10px',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e0e0e0',
+                    },
+                  }
                 }}
-                onClick={scrollLeft}
-                aria-label="Scroll left"
-                tabIndex={0}
-              >
-                <ChevronLeftIcon style={{ fontSize: 24 }} />
-              </button>
-              {/* Right Arrow - overlay inside scroll area */}
-              <button
-                style={{
+              />
+              <Button 
+                variant="contained"
+                color="primary"
+                onClick={handleCravingSubmit}
+                sx={{
                   position: 'absolute',
-                  right: 8,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 3,
-                  background: 'rgba(255,255,255,0.85)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 36,
-                  height: 36,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: canScrollRight ? 'pointer' : 'not-allowed',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-                  opacity: canScrollRight ? 1 : 0.5,
-                  pointerEvents: canScrollRight ? 'auto' : 'none',
-                  transition: 'opacity 0.2s',
+                  right: '-1px',
+                  top: '1px',
+                  bottom: '1px',
+                  borderRadius: '0 8px 8px 0',
+                  minWidth: '54px',
+                  boxShadow: 'none',
                 }}
-                onClick={scrollRight}
-                aria-label="Scroll right"
-                tabIndex={0}
               >
-                <ChevronRightIcon style={{ fontSize: 24 }} />
-              </button>
-              <div
-                className="meals"
+                <ArrowForwardIcon />
+              </Button>
+            </Box>
+
+            {/* Quick filter chips */}
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              sx={{ overflowX: 'auto', pb: 2, flexWrap: 'nowrap' }}
+            >
+              <Chip
+                label="Quick"
+                variant="outlined"
+                onClick={() => setCravingInput('quick')}
+                sx={{ borderRadius: '16px' }}
+              />
+              <Chip
+                label="Healthy"
+                variant="outlined"
+                onClick={() => setCravingInput('healthy')}
+                sx={{ borderRadius: '16px' }}
+              />
+              <Chip
+                label="Vegetarian"
+                variant="outlined"
+                onClick={() => setCravingInput('vegetarian')}
+                sx={{ borderRadius: '16px' }}
+              />
+              <Chip
+                label="High Protein"
+                variant="outlined"
+                onClick={() => setCravingInput('high protein')}
+                sx={{ borderRadius: '16px' }}
+              />
+              <Chip
+                label="Dessert"
+                variant="outlined"
+                onClick={() => setCravingInput('dessert')}
+                sx={{ borderRadius: '16px' }}
+              />
+            </Stack>
+
+            {/* Time based message with better styling */}
+            <Paper
+              elevation={0}
+              sx={{
+                background: timeOfDay === 'breakfast' ? '#FFF9E6' : 
+                           timeOfDay === 'lunch' ? '#F0F7F0' : '#F4F1F8',
+                padding: '16px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                mb: 3,
+                border: '1px solid',
+                borderColor: timeOfDay === 'breakfast' ? '#F0E6C0' : 
+                            timeOfDay === 'lunch' ? '#D0E6D0' : '#E0D6E6',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                  {timeOfDay === 'breakfast' && '☀️ Good Morning! Start your day with these breakfast suggestions.'}
+                  {timeOfDay === 'lunch' && '🌞 Good Afternoon! Here are some lunch ideas to keep you energized.'}
+                  {timeOfDay === 'dinner' && '🌙 Good Evening! Unwind with these dinner suggestions.'}
+                </Typography>
+              </Box>
+            </Paper>
+            
+            {/* Meal suggestions area */}
+            <Box sx={{ position: 'relative', mb: 3 }}>
+              {/* Navigation arrows with improved styling */}
+              {canScrollLeft && (
+                <IconButton
+                  onClick={scrollLeft}
+                  aria-label="Scroll left"
+                  sx={{
+                    position: 'absolute',
+                    left: -20,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 3,
+                    background: 'rgba(255,255,255,0.9)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    '&:hover': { background: 'rgba(255,255,255,1)' },
+                  }}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+              )}
+              {canScrollRight && (
+                <IconButton
+                  onClick={scrollRight}
+                  aria-label="Scroll right"
+                  sx={{
+                    position: 'absolute',
+                    right: -20,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 3,
+                    background: 'rgba(255,255,255,0.9)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    '&:hover': { background: 'rgba(255,255,255,1)' },
+                  }}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              )}
+              
+              {/* Improved meal cards container */}
+              <Box
                 ref={mealsScrollRef}
-                style={{
+                sx={{
                   display: 'flex',
-                  overflowX: 'hidden',
+                  overflowX: 'auto',
                   gap: '16px',
-                  padding: '16px 32px', // padding for arrows
-                  background: '#fff',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                  margin: 0,
+                  pb: 2,
+                  scrollbarWidth: 'none', // Firefox
+                  '&::-webkit-scrollbar': {
+                    display: 'none', // Chrome, Safari, Edge
+                  },
+                  '-ms-overflow-style': 'none', // IE
+                  scrollBehavior: 'smooth',
                 }}
                 onScroll={handleScroll}
               >
@@ -312,28 +428,30 @@ const Dashboard = () => {
                     difficulty: meal.difficulty,
                   };
                   return (
-                    <div
+                    <Box
                       key={meal.id}
-                      style={{
+                      sx={{
                         minWidth: 280,
                         maxWidth: 280,
-                        minHeight: 380,
-                        maxHeight: 380,
+                        height: 380,
                         flex: '0 0 auto',
-                        display: 'flex',
-                        background: '#fff',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        transition: 'all 0.1s ease',
+                        border: '1px solid #eaeaea',
+                        '&:hover': {
+                          borderColor: '#d0d0d0',
+                        },
                       }}
                     >
                       <MealCard meal={mealCardObj} />
-                    </div>
+                    </Box>
                   );
                 })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </Box>
+            </Box>
+          </Box>
+        </Paper>
       </div>
 
       <MealPlanner />
