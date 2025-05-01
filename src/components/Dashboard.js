@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import { supabase } from '../lib/supabaseClient';
-import { getMealCategories, getDietaryTags } from '../services/mealService';
+import { getMealCategories, getDietaryTags, getImageUrl } from '../services/mealService';
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Box,
-  Chip,
   Stack,
   Grid,
   TextField,
@@ -20,9 +18,10 @@ import { format } from 'date-fns';
 import SubscribedDietPlans from './SubscribedDietPlans';
 import { FaBacon, FaWeight, FaLeaf } from 'react-icons/fa';
 import Modal from 'react-modal';
+import { meals as staticMeals } from '../data/meals';
+import MealCard from './MealCard';
 
 const Dashboard = () => {
-  const [recommendedMeals, setRecommendedMeals] = useState([]);
   const [cravingInput, setCravingInput] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
@@ -33,6 +32,9 @@ const Dashboard = () => {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestedMeals, setSuggestedMeals] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
 
   const filteredPlans = dietPlans.filter((plan) =>
     plan.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -64,25 +66,37 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    const fetchRecommendedMeals = async () => {
+    const fetchSuggestedMeals = async () => {
       try {
-        const { data: mealsData, error } = await supabase
-          .from('meals')
-          .select('*')
-          .ilike('tags', `%${timeOfDay}%`)
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        if (error) throw error;
-
-        setRecommendedMeals(mealsData);
+        // Fetch meals, categories, and tags in parallel
+        const [{ data: mealsData, error: mealsError }, { data: categoriesData }, { data: tagsData }] = await Promise.all([
+          supabase.from('meals').select('*').limit(3),
+          supabase.from('meal_categories').select('*'),
+          supabase.from('dietary_tags').select('*'),
+        ]);
+        if (mealsError) throw mealsError;
+        setCategories(categoriesData || []);
+        setTags(tagsData || []);
+        // Map category and tag IDs to names
+        const processed = (mealsData || []).map(meal => ({
+          ...meal,
+          imageUrl: meal.image,
+          categoryNames: (meal.category || []).map(cid => {
+            const cat = (categoriesData || []).find(c => c.id === cid);
+            return cat ? cat.name : cid;
+          }),
+          tagNames: (meal.tags || []).map(tid => {
+            const tag = (tagsData || []).find(t => t.id === tid);
+            return tag ? tag.name : tid;
+          })
+        }));
+        setSuggestedMeals(processed);
       } catch (err) {
-        console.error('Error fetching recommended meals:', err);
+        setSuggestedMeals([]);
       }
     };
-
-    fetchRecommendedMeals();
-  }, [timeOfDay]);
+    fetchSuggestedMeals();
+  }, []);
 
   const handleCravingSubmit = async () => {
     try {
@@ -95,7 +109,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      setRecommendedMeals(mealsData);
+      console.log(mealsData);
     } catch (err) {
       console.error('Error fetching meals based on craving:', err);
     }
@@ -137,27 +151,29 @@ const Dashboard = () => {
             </Typography>
             <p style={{ fontSize: '1.3rem', fontWeight: '500', color: '#555' }}>Suggestions for {timeOfDay}:</p>
             <Grid container spacing={2}>
-              {recommendedMeals.map((meal) => (
-                <Grid item xs={12} sm={6} md={4} key={meal.id}>
-                  <Card style={{ borderRadius: '10px', transition: 'transform 0.3s', cursor: 'pointer' }}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                    <CardMedia
-                      component="img"
-                      height="140"
-                      image={meal.image_url || '/public/logo192.png'}
-                      alt={meal.name}
-                      style={{ borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}
-                    />
-                    <CardContent>
-                      <Typography variant="h6" style={{ fontWeight: 'bold', color: '#333' }}>{meal.name}</Typography>
-                      <Typography variant="body2" color="textSecondary" style={{ fontSize: '0.9rem' }}>
-                        {meal.description}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+              {suggestedMeals.map((meal) => {
+                // Compose the meal object for MealCard
+                const mealCardObj = {
+                  id: meal.id,
+                  name: meal.name,
+                  description: meal.description,
+                  image: meal.imageUrl,
+                  dietaryInfo: meal.dietary_info || {},
+                  prepTime: meal.prep_time || 0,
+                  cookTime: meal.cook_time || 0,
+                  tags: [...(meal.categoryNames || []), ...(meal.tagNames || [])],
+                  ingredients: meal.ingredients,
+                  instructions: meal.instructions,
+                  chef: meal.chef,
+                  servings: meal.servings,
+                  difficulty: meal.difficulty,
+                };
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={meal.id}>
+                    <MealCard meal={mealCardObj} />
+                  </Grid>
+                );
+              })}
             </Grid>
 
             <Box mt={4}>
