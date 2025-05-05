@@ -31,16 +31,14 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [cravingInput, setCravingInput] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState('');
-  const [dietPlans, setDietPlans] = useState([
-    { name: 'Keto', icon: <FaBacon /> },
-    { name: 'Weight Loss', icon: <FaWeight /> },
-    { name: 'Vegan', icon: <FaLeaf /> },
-  ]);
+  const [dietPlans, setDietPlans] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedMeals, setSuggestedMeals] = useState([]);
@@ -110,6 +108,56 @@ const Dashboard = () => {
       }
     };
     fetchSuggestedMeals();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserDietaryTags = async () => {
+      try {
+        const { data: userDietaryTags, error } = await supabase
+          .from('user_dietary_tags')
+          .select('name, icon');
+
+        if (error) {
+          console.error('Error fetching user dietary tags:', error);
+          return;
+        }
+
+        setDietPlans(userDietaryTags || []);
+      } catch (err) {
+        console.error('Unexpected error fetching user dietary tags:', err);
+      }
+    };
+
+    fetchUserDietaryTags();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubscribedPlans = async () => {
+      try {
+        const { data: userTags, error: userTagsError } = await supabase
+          .from('user_dietary_tags')
+          .select('dietary_tag_id')
+          .eq('user_id', user.id);
+
+        if (userTagsError) throw userTagsError;
+
+        const subscribedTagIds = userTags.map((tag) => tag.dietary_tag_id);
+
+        const { data: allTags, error: allTagsError } = await supabase
+          .from('dietary_tags')
+          .select('*');
+
+        if (allTagsError) throw allTagsError;
+
+        const subscribedPlans = allTags.filter((tag) => subscribedTagIds.includes(tag.id));
+
+        setDietPlans(subscribedPlans);
+      } catch (err) {
+        console.error('Error fetching subscribed plans:', err);
+      }
+    };
+
+    fetchSubscribedPlans();
   }, []);
 
   useEffect(() => {

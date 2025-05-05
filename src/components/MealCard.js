@@ -76,9 +76,9 @@ const MealCard = ({ meal }) => {
           </Stack>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {meal.tags.map((tag) => (
+            {meal.tags.map((tag, index) => (
               <Chip
-                key={tag}
+                key={`${tag}-${index}`}
                 label={tag}
                 size="small"
                 color="primary"
