@@ -8,11 +8,11 @@ const SubscribedDietPlans = ({ dietPlans, setDietPlans }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [availablePlans] = useState([
-    { name: 'Keto', icon: <FaBacon /> },
-    { name: 'Weight Loss', icon: <FaWeight /> },
-    { name: 'Vegan', icon: <FaLeaf /> },
-    { name: 'Paleo', icon: <FaLeaf /> },
-    { name: 'Mediterranean', icon: <FaLeaf /> },
+    { id: 'keto', name: 'Keto', icon: <FaBacon /> },
+    { id: 'weight-loss', name: 'Weight Loss', icon: <FaWeight /> },
+    { id: 'vegan', name: 'Vegan', icon: <FaLeaf /> },
+    { id: 'paleo', name: 'Paleo', icon: <FaLeaf /> },
+    { id: 'mediterranean', name: 'Mediterranean', icon: <FaLeaf /> },
   ]);
 
   const toggleModal = () => {
