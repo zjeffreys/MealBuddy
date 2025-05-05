@@ -5,10 +5,12 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import './ManageDietPlansModal.css';
 
-const ManageDietPlansModal = ({ isOpen, onRequestClose, dietPlans, handleToggleSubscription, searchQuery, handleSearch, filteredPlans }) => {
+const ManageDietPlansModal = ({ isOpen, onRequestClose, dietPlans, handleToggleSubscription, filteredPlans }) => {
   const { user } = useAuth();
   const [availableDietPlans, setAvailableDietPlans] = useState([]);
   const [subscribedPlans, setSubscribedPlans] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredDiscoverablePlans, setFilteredDiscoverablePlans] = useState([]);
 
   useEffect(() => {
     const fetchSubscribedPlans = async () => {
@@ -42,6 +44,17 @@ const ManageDietPlansModal = ({ isOpen, onRequestClose, dietPlans, handleToggleS
       fetchSubscribedPlans();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const filterPlans = () => {
+      const filtered = availableDietPlans.filter((plan) =>
+        plan.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredDiscoverablePlans(filtered);
+    };
+
+    filterPlans();
+  }, [searchQuery, availableDietPlans]);
 
   const reloadPlans = async () => {
     try {
@@ -107,6 +120,10 @@ const ManageDietPlansModal = ({ isOpen, onRequestClose, dietPlans, handleToggleS
     }
   };
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -149,7 +166,7 @@ const ManageDietPlansModal = ({ isOpen, onRequestClose, dietPlans, handleToggleS
           aria-label="Search for diet plans"
         />
         <div className="available-plans">
-          {availableDietPlans
+          {filteredDiscoverablePlans
             .filter((plan) => !subscribedPlans.some((p) => p.id === plan.id))
             .map((plan, index) => (
               <div key={index} className="diet-plan-row">
