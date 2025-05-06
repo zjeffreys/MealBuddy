@@ -5,6 +5,18 @@
   font-family: Arial, sans-serif;
 }
 
+/* Media query to remove padding in mobile view */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 0;
+  }
+  
+  .smart-meal-card {
+    padding: 20px 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
 .dashboard h1 {
   font-size: 24px;
   margin-bottom: 20px;

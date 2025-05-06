@@ -264,30 +264,45 @@ const Dashboard = () => {
           elevation={2}
           className="smart-meal-card"
           sx={{
-            margin: '20px 0',
+            margin: { xs: '0', sm: '20px 0' },
             padding: 0,
-            borderRadius: '12px',
+            borderRadius: { xs: 0, sm: '12px' },
             width: '100%',
             border: 'none',
             position: 'relative',
             overflow: 'hidden',
-            background: '#fcfcfc', // Lighter, more subtle background color
+            background: '#a8ff78', // Changed to match green color from screenshot
           }}
         >
-          <Box sx={{ padding: '20px 24px 0' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+          <Box sx={{ 
+            padding: { xs: '16px 0 0', sm: '20px 24px 0' } 
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '8px',
+              px: { xs: '16px', sm: 0 }
+            }}>
               <RestaurantIcon sx={{ fontSize: 28, marginRight: '12px', color: '#4a90e2' }} />
               <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
                 Smart Meal Suggestions
               </Typography>
             </Box>
             
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+            <Typography variant="body2" sx={{ 
+              color: 'text.secondary', 
+              mb: 2,
+              px: { xs: '16px', sm: 0 }
+            }}>
               Get inspired! Browse personalized meal ideas or search for something specific.
             </Typography>
 
             {/* Search input with better styling */}
-            <Box sx={{ position: 'relative', mb: 3 }}>
+            <Box sx={{ 
+              position: 'relative', 
+              mb: { xs: 2, sm: 3 },
+              px: { xs: '16px', sm: 0 }
+            }}>
               <TextField
                 fullWidth
                 placeholder="I'm craving..."
@@ -343,7 +358,7 @@ const Dashboard = () => {
             <Stack 
               direction="row" 
               spacing={1} 
-              sx={{ overflowX: 'auto', pb: 2, flexWrap: 'nowrap' }}
+              sx={{ overflowX: 'auto', pb: 2, flexWrap: 'nowrap', px: { xs: 0, sm: 0 } }}
             >
               <Chip
                 label="Quick"
@@ -382,15 +397,15 @@ const Dashboard = () => {
               elevation={0}
               sx={{
                 background: timeOfDay === 'breakfast' ? '#FFF9E6' : 
-                           timeOfDay === 'lunch' ? '#F0F7F0' : '#F4F1F8',
-                padding: '16px',
+                         timeOfDay === 'lunch' ? '#F0F7F0' : '#F4F1F8',
+                padding: { xs: '12px', sm: '16px' },
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
-                mb: 3,
+                mb: { xs: 2, sm: 3 },
                 border: '1px solid',
                 borderColor: timeOfDay === 'breakfast' ? '#F0E6C0' : 
-                            timeOfDay === 'lunch' ? '#D0E6D0' : '#E0D6E6',
+                          timeOfDay === 'lunch' ? '#D0E6D0' : '#E0D6E6',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
@@ -403,7 +418,7 @@ const Dashboard = () => {
             </Paper>
             
             {/* Meal suggestions area */}
-            <Box sx={{ position: 'relative', mb: 3 }}>
+            <Box sx={{ position: 'relative', mb: { xs: 2, sm: 3 } }}>
               {/* Navigation arrows with improved styling */}
               {canScrollLeft && (
                 <IconButton
@@ -418,6 +433,7 @@ const Dashboard = () => {
                     background: 'rgba(255,255,255,0.9)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     '&:hover': { background: 'rgba(255,255,255,1)' },
+                    display: { xs: 'none', sm: 'flex' } // Hide on mobile
                   }}
                 >
                   <ChevronLeftIcon />
@@ -436,6 +452,7 @@ const Dashboard = () => {
                     background: 'rgba(255,255,255,0.9)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     '&:hover': { background: 'rgba(255,255,255,1)' },
+                    display: { xs: 'none', sm: 'flex' } // Hide on mobile
                   }}
                 >
                   <ChevronRightIcon />
@@ -447,9 +464,13 @@ const Dashboard = () => {
                 ref={mealsScrollRef}
                 sx={{
                   display: 'flex',
-                  overflowX: 'auto',
-                  gap: '16px',
-                  pb: 2,
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  flexWrap: { xs: 'nowrap', sm: 'nowrap' },
+                  overflowX: { xs: 'hidden', sm: 'auto' },
+                  gap: { xs: '12px', sm: '16px' },
+                  pb: { xs: 1, sm: 2 },
+                  px: { xs: '8px', sm: 0 },
+                  width: '100%',
                   scrollbarWidth: 'none', // Firefox
                   '&::-webkit-scrollbar': {
                     display: 'none', // Chrome, Safari, Edge
@@ -479,14 +500,16 @@ const Dashboard = () => {
                     <Box
                       key={meal.id}
                       sx={{
-                        minWidth: 280,
-                        maxWidth: 280,
-                        height: 380,
+                        width: { xs: '100%', sm: 280 },
+                        minWidth: { xs: '100%', sm: 280 },
+                        maxWidth: { xs: '100%', sm: 280 },
+                        height: { xs: 'auto', sm: 380 },
                         flex: '0 0 auto',
                         borderRadius: '12px',
                         overflow: 'hidden',
                         transition: 'all 0.1s ease',
                         border: '1px solid #eaeaea',
+                        marginBottom: { xs: '0', sm: 0 },
                         '&:hover': {
                           borderColor: '#d0d0d0',
                         },
