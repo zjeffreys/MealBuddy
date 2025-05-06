@@ -23,6 +23,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EmailIcon from '@mui/icons-material/Email';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import LockIcon from '@mui/icons-material/Lock';
 import { FaTimes, FaFilePdf, FaPrint, FaFacebook, FaTwitter } from 'react-icons/fa';
 import { useReactToPrint } from 'react-to-print';
 import { jsPDF } from 'jspdf';
@@ -31,7 +32,7 @@ import html2canvas from 'html2canvas';
 // Set the app element for accessibility
 Modal.setAppElement('#root');
 
-const MealDetailsModal = ({ isOpen, onClose, meal }) => {
+const MealDetailsModal = ({ isOpen, onClose, meal, isPremium }) => {
   const [shareMenuAnchor, setShareMenuAnchor] = useState(null);
   const contentRef = useRef(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -168,12 +169,43 @@ const MealDetailsModal = ({ isOpen, onClose, meal }) => {
         </IconButton>
         
         {meal.image && (
-          <div className="meal-image-container">
+          <div className="meal-image-container" style={{ position: 'relative' }}>
             <img
               src={meal.image}
               alt={meal.name}
               className="meal-detail-image"
+              style={{
+                filter: !isPremium ? 'blur(5px)' : 'none',
+                transition: 'filter 0.3s ease'
+              }}
             />
+            {!isPremium && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  padding: 2,
+                  textAlign: 'center',
+                }}
+              >
+                <LockIcon sx={{ fontSize: 60, mb: 1 }} />
+                <Typography variant="h6" gutterBottom>
+                  Upgrade to Premium
+                </Typography>
+                <Typography variant="body1">
+                  to see high quality recipe images
+                </Typography>
+              </Box>
+            )}
           </div>
         )}
         
@@ -221,19 +253,53 @@ const MealDetailsModal = ({ isOpen, onClose, meal }) => {
               <Typography variant="h6" gutterBottom>
                 Ingredients
               </Typography>
-              <List disablePadding sx={{ mb: 3 }}>
-                {meal.ingredients.map((ingredient, idx) => (
-                  <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
-                    <ListItemText 
-                      primary={
-                        typeof ingredient === 'string' 
-                          ? ingredient 
-                          : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.item || ''}`
-                      } 
-                    />
-                  </ListItem>
-                ))}
-              </List>
+              <Box sx={{ position: 'relative' }}>
+                <List disablePadding sx={{ 
+                  mb: 3,
+                  filter: !isPremium ? 'blur(5px)' : 'none',
+                  transition: 'filter 0.3s ease'
+                }}>
+                  {meal.ingredients.map((ingredient, idx) => (
+                    <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
+                      <ListItemText 
+                        primary={
+                          typeof ingredient === 'string' 
+                            ? ingredient 
+                            : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.item || ''}`
+                        } 
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                {!isPremium && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      color: 'white',
+                      padding: 2,
+                      textAlign: 'center',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <LockIcon sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="body1" gutterBottom>
+                      Upgrade to Premium
+                    </Typography>
+                    <Typography variant="body2">
+                      to see ingredients
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </>
           )}
           
@@ -242,15 +308,48 @@ const MealDetailsModal = ({ isOpen, onClose, meal }) => {
               <Typography variant="h6" gutterBottom>
                 Instructions
               </Typography>
-              <List disablePadding>
-                {meal.instructions.map((instruction, idx) => (
-                  <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
-                    <ListItemText 
-                      primary={`${idx + 1}. ${instruction}`} 
-                    />
-                  </ListItem>
-                ))}
-              </List>
+              <Box sx={{ position: 'relative' }}>
+                <List disablePadding sx={{ 
+                  filter: !isPremium ? 'blur(5px)' : 'none',
+                  transition: 'filter 0.3s ease'
+                }}>
+                  {meal.instructions.map((instruction, idx) => (
+                    <ListItem key={idx} disablePadding sx={{ py: 0.5 }}>
+                      <ListItemText 
+                        primary={`${idx + 1}. ${instruction}`} 
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                {!isPremium && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      color: 'white',
+                      padding: 2,
+                      textAlign: 'center',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <LockIcon sx={{ fontSize: 40, mb: 1 }} />
+                    <Typography variant="body1" gutterBottom>
+                      Upgrade to Premium
+                    </Typography>
+                    <Typography variant="body2">
+                      to see cooking instructions
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </>
           )}
           

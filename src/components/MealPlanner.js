@@ -7,11 +7,15 @@ import { FaLeaf, FaWeight, FaBacon, FaTimes, FaCheckCircle, FaPlusCircle, FaSync
 import Modal from 'react-modal';
 import { getImageUrl } from '../services/mealService';
 import ManageDietPlansModal from './ManageDietPlansModal';
+import { useAuth } from '../contexts/AuthContext';
 
 // Set the app element for accessibility
 Modal.setAppElement('#root');
 
 const MealPlanner = () => {
+  const { subscriptionType } = useAuth();
+  const isPremium = subscriptionType === 'premium';
+
   const [meals, setMeals] = useState([]);
   const [mealsLoading, setMealsLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState([]);
@@ -425,7 +429,7 @@ const MealPlanner = () => {
                 instructions: meal.instructions || [],
                 chef: meal.chef,
                 category: meal.category
-              }} />
+              }} isPremium={isPremium} />
             ))}
           </div>
         </div>

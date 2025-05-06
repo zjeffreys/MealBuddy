@@ -492,7 +492,7 @@ const Dashboard = () => {
                         },
                       }}
                     >
-                      <MealCard meal={mealCardObj} />
+                      <MealCard meal={mealCardObj} isPremium={true} />
                     </Box>
                   );
                 })}
